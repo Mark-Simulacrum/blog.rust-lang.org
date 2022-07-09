@@ -10,73 +10,24 @@
         <name>Maintained by the Rust Teams.</name>
         <uri>https://github.com/rust-lang/blog.rust-lang.org/</uri>
     </author>
-    <updated>2020-12-14T19:05:46+00:00</updated>
+    <updated>2022-07-09T16:24:20+00:00</updated>
 
     
     <entry>
-        <title>What the Error Handling Project Group is Working On</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/11/23/What-the-error-handling-project-group-is-working-on.html" type="text/html" title="What the Error Handling Project Group is Working On" />
-        <published>2020-11-23T00:00:00+00:00</published>
-        <updated>2020-11-23T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/11/23/What-the-error-handling-project-group-is-working-on.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/11/23/What-the-error-handling-project-group-is-working-on.html">&lt;p&gt;The Rust community takes its error handling seriously. There’s already a strong culture in place for emphasizing helpful error handling and reporting, with multiple libraries each offering their own take (see Jane Lusby’s thorough &lt;a href&#x3D;&quot;https://youtu.be/rAF8mLI0naQ&quot;&gt;survey&lt;/a&gt; of Rust error handling/reporting libraries).&lt;/p&gt;
-&lt;p&gt;But there’s still room for improvement. The main focus of the group is carrying on error handling-related work that was in progress before the group&#x27;s formation. To that end, we&#x27;re working on systematically addressing error handling-related issues, as well as eliminating blockers that are holding up stalled RFCs.&lt;/p&gt;
-&lt;p&gt;Our first few meetings saw us setting a number of short- and long-term goals. These goals fall into one of three themes: making the &lt;code&gt;Error&lt;/code&gt; trait more universally accessible, improving error handling ergonomics, and authoring additional learning resources.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#one-standardized-error-trait&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;one-standardized-error-trait&quot;&gt;&lt;/a&gt;One Standardized &lt;code&gt;Error&lt;/code&gt; Trait&lt;/h2&gt;
-&lt;p&gt;The &lt;code&gt;Error&lt;/code&gt; trait has been around since 1.0, and exposed two methods: &lt;code&gt;Error::description&lt;/code&gt; and &lt;code&gt;Error::cause&lt;/code&gt;. As it was originally constructed, it was too restictive for a number of reasons&lt;sup&gt;1&lt;/sup&gt;. The &lt;code&gt;Failure&lt;/code&gt; crate addressed many of the &lt;code&gt;Error&lt;/code&gt; trait&#x27;s shortcomings by exporting the &lt;code&gt;Fail&lt;/code&gt; trait, which informs many of changes that are being made to improve the &lt;code&gt;Error&lt;/code&gt; trait.&lt;/p&gt;
-&lt;p&gt;On that note, bolstering the &lt;code&gt;std::error::Error&lt;/code&gt; trait such that it could be adopted across the Rust community as &lt;em&gt;the&lt;/em&gt; &lt;code&gt;Error&lt;/code&gt; trait has been an ongoing process since &lt;a href&#x3D;&quot;https://github.com/rust-lang/rfcs/pull/2504&quot;&gt;RFC 2504&lt;/a&gt; was merged in August 2018.&lt;/p&gt;
-&lt;p&gt;This process also involves stabilizing many &lt;code&gt;Error&lt;/code&gt; trait APIs and crates that are, as of this writing, on nightly only. These include the &lt;code&gt;backtrace&lt;/code&gt; and &lt;code&gt;chain&lt;/code&gt; methods, which are both extremely useful for working with error types. If you’re interested in following or contributing to this work, take a look at &lt;a href&#x3D;&quot;https://github.com/rust-lang/project-error-handling/issues/3&quot;&gt;this issue&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Another related initiative is migrating the &lt;code&gt;Error&lt;/code&gt; trait to &lt;code&gt;core&lt;/code&gt; so that it’s more widely accessible to different use cases (such as in FFI or embedded contexts).&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#more-ways-to-access-error-contexts&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;more-ways-to-access-error-contexts&quot;&gt;&lt;/a&gt;More Ways to Access Error Contexts&lt;/h2&gt;
-&lt;p&gt;Rust’s language semantics already provide a decently ergonomic error handling experience, what with the &lt;code&gt;Result&lt;/code&gt; type and the &lt;code&gt;?&lt;/code&gt; operator. The error handling group has identified a few additional features to further improve the error handling user experience.&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#adding-the-capability-to-iterate-through-the-backtrace-type&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;adding-the-capability-to-iterate-through-the-backtrace-type&quot;&gt;&lt;/a&gt;Adding the Capability to Iterate Through the &lt;code&gt;Backtrace&lt;/code&gt; Type&lt;/h3&gt;
-&lt;p&gt;As of this writing, the &lt;code&gt;backtrace&lt;/code&gt; type only implements the &lt;code&gt;Display&lt;/code&gt; and &lt;code&gt;Debug&lt;/code&gt; traits. This means that the only way to work with the &lt;code&gt;backtrace&lt;/code&gt; type is to print it out, which is less than ideal. An iterator API that provided the ability to iterate through stack frames would give users the ability to control how their backtraces are formatted, which is a necessary step adding &lt;code&gt;std::backtrace::Backtrace&lt;/code&gt; support to crates like &lt;code&gt;color-backtrace&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;Upon researching strategies for how to tackle this, we found that the &lt;code&gt;backtrace&lt;/code&gt; crate already has a &lt;code&gt;frames&lt;/code&gt; method that would work nicely for implementing the &lt;code&gt;Iterator&lt;/code&gt; API. It should be a relatively straightforward ordeal to expose an identical method in &lt;code&gt;std&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;A &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pull/78299&quot;&gt;PR&lt;/a&gt; for this has been opened for anyone who would like to check it out.&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#generic-member-access&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;generic-member-access&quot;&gt;&lt;/a&gt;Generic Member Access&lt;/h3&gt;
-&lt;p&gt;Currently, when we want to fetch some additional context related to an error, there are specific methods that need to be called in order to fetch that context. For example, to see the backtrace for an error, we’d call the &lt;code&gt;backtrace&lt;/code&gt; method: &lt;code&gt;let backtrace &#x3D; some_error.backtrace();&lt;/code&gt;. The problem with this approach is that it&#x27;s not possible to support types that are defined outside of &lt;code&gt;std&lt;/code&gt;. Even for types that exist within &lt;code&gt;std&lt;/code&gt;, a method to access each respective type needs to be defined, which makes things cumbersome and harder to maintain.&lt;/p&gt;
-&lt;p&gt;As the name implies, generic member access, when it gets implemented, is a type-agnostic way to access different pieces of context from an &lt;code&gt;Error&lt;/code&gt; trait object. The analogy that clicked for me is when you’re parsing a string into a number, with something like:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-rust&quot;&gt;let ten &#x3D; &amp;quot;10&amp;quot;.parse::&amp;lt;i32&amp;gt;();
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Or when you’re collecting the contents yielded by an iterator:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-rust&quot;&gt;use std::collections::HashSet;
-
-let a_to_z_set &#x3D; (&#x27;a&#x27;..&#x3D;&#x27;z&#x27;).collect::&amp;lt;HashSet&amp;lt;_&amp;gt;&amp;gt;();
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;In a similar vein, you’d be able to access some piece of context from an error by specifying its type ID:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-rust&quot;&gt;let span_trace &#x3D; some_error.context::&amp;lt;&amp;amp;SpanTrace&amp;gt;();
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;This could be used to fetch other pieces of context related to the error such as its backtrace, the error’s sources, status codes, alternate formatting representations (such as &lt;code&gt;&amp;amp;dyn Serialize&lt;/code&gt;).&lt;/p&gt;
-&lt;p&gt;This feature will enable other features we plan on adding down the line, such as exposing a way to report back all of the locations from which errors originated from in a program, as well as exposing a more consistent error reporting format besides just &lt;code&gt;Display&lt;/code&gt; and &lt;code&gt;Debug&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;Jane has been putting in a lot of work on pushing these ideas forward. You can check out the associated &lt;a href&#x3D;&quot;https://github.com/rust-lang/rfcs/pull/2895&quot;&gt;RFC&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#authoring-a-book-on-rust-error-handling-best-practices&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;authoring-a-book-on-rust-error-handling-best-practices&quot;&gt;&lt;/a&gt;Authoring a Book on Rust Error Handling Best Practices&lt;/h2&gt;
-&lt;p&gt;Last but not least, there’s a lot of interest in the group around authoring &lt;a href&#x3D;&quot;https://github.com/rust-lang/project-error-handling/tree/master/the-rust-error-book&quot;&gt;&lt;em&gt;The Rust Error Book&lt;/em&gt;&lt;/a&gt;. The aim of the book would be to codify and communicate different error handling best practices based on the respective use-case. This could include FFI use-cases, or best practices around returning error codes from programs.&lt;/p&gt;
-&lt;p&gt;This is an ongoing effort that will see a lot of progress in the coming weeks and months!&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#in-summary&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;in-summary&quot;&gt;&lt;/a&gt;In Summary&lt;/h2&gt;
-&lt;p&gt;We&#x27;re excited by the opportunities to continue to iterate on and improve Rust&#x27;s error handling ergonomics and culture! If you&#x27;re interested in helping out and/or joining in on the conversation, please come by and introduce yourself in our &lt;a href&#x3D;&quot;https://rust-lang.zulipchat.com/#narrow/stream/257204-project-error-handling&quot;&gt;Zulip stream&lt;/a&gt;. You can also keep track of our progress via our &lt;a href&#x3D;&quot;https://github.com/rust-lang/project-error-handling&quot;&gt;GitHub repo&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Lastly, we&#x27;ll be presenting some forthcoming news about a universally consistent error reporting format in our next update, so stay tuned for that!&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#footnotes&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;footnotes&quot;&gt;&lt;/a&gt;Footnotes&lt;/h3&gt;
-&lt;p&gt;&lt;sup&gt;1&lt;/sup&gt;The &lt;code&gt;Error::description&lt;/code&gt; method only supported string slices, which meant that it was not straightforward to create dynamic error messages that included additional context. This method was deprecated in favor of &lt;code&gt;Display&lt;/code&gt;. The &lt;code&gt;Error::cause&lt;/code&gt; method, now known as &lt;code&gt;Error::source&lt;/code&gt;, doesn&#x27;t enforce errors having a &lt;code&gt;&#x27;static&lt;/code&gt; lifetime, which means that downcasting error sources is impossible, making it much more difficult to handle errors using dynamic error handlers.&lt;/p&gt;
-</content>
-
-        <author>
-            <name>Sean Chen</name>
-        </author>
-    </entry>
-    
-    <entry>
-        <title>1.48.0 pre-release testing</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/11/16/1.48.0-prerelease.html" type="text/html" title="1.48.0 pre-release testing" />
-        <published>2020-11-16T00:00:00+00:00</published>
-        <updated>2020-11-16T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/11/16/1.48.0-prerelease.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/11/16/1.48.0-prerelease.html">&lt;p&gt;The 1.48.0 pre-release is ready for testing. The release is scheduled for this
-Thursday, November 19th. &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/blob/stable/RELEASES.md#version-1480-2020-11-19&quot;&gt;Release notes can be found here.&lt;/a&gt;&lt;/p&gt;
+        <title>1.62.0 pre-release testing</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/06/28/1.62.0-prerelease.html" type="text/html" title="1.62.0 pre-release testing" />
+        <published>2022-06-28T00:00:00+00:00</published>
+        <updated>2022-06-28T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/06/28/1.62.0-prerelease.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/06/28/1.62.0-prerelease.html">&lt;p&gt;The 1.62.0 pre-release is ready for testing. The release is scheduled for this
+Thursday, June 30th. &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/blob/stable/RELEASES.md#version-1620-2022-06-30&quot;&gt;Release notes can be found here.&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;You can try it out locally by running:&lt;/p&gt;
 &lt;pre&gt;&lt;code class&#x3D;&quot;language-plain&quot;&gt;RUSTUP_DIST_SERVER&#x3D;https://dev-static.rust-lang.org rustup update stable
 &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The index is &lt;a href&#x3D;&quot;https://dev-static.rust-lang.org/dist/2020-11-16/index.html&quot;&gt;https://dev-static.rust-lang.org/dist/2020-11-16/index.html&lt;/a&gt;. You
-can leave feedback on the &lt;a href&#x3D;&quot;https://internals.rust-lang.org/t/rust-1-48-0-pre-release-testing/13401&quot;&gt;internals thread&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The index is &lt;a href&#x3D;&quot;https://dev-static.rust-lang.org/dist/2022-06-27/index.html&quot;&gt;https://dev-static.rust-lang.org/dist/2022-06-27/index.html&lt;/a&gt;. You
+can leave feedback on the &lt;a href&#x3D;&quot;https://internals.rust-lang.org/t/rust-1-62-0-prerelease-testing/16913&quot;&gt;internals thread&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The release team is also thinking about changes to our pre-release process:
+we&#x27;d love your feedback &lt;a href&#x3D;&quot;https://github.com/rust-lang/release-team/issues/16&quot;&gt;on this GitHub issue&lt;/a&gt;.&lt;/p&gt;
 </content>
 
         <author>
@@ -85,410 +36,230 @@ can leave feedback on the &lt;a href&#x3D;&quot;https://internals.rust-lang.org/
     </entry>
     
     <entry>
-        <title>Using rustc_codegen_cranelift for debug builds</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/11/15/Using-rustc_codegen_cranelift.html" type="text/html" title="Using rustc_codegen_cranelift for debug builds" />
-        <published>2020-11-15T00:00:00+00:00</published>
-        <updated>2020-11-15T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/11/15/Using-rustc_codegen_cranelift.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/11/15/Using-rustc_codegen_cranelift.html">&lt;h2&gt;&lt;a href&#x3D;&quot;#what-is-rustc_codegen_cranelift&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;what-is-rustc_codegen_cranelift&quot;&gt;&lt;/a&gt;What is &lt;code&gt;rustc_codegen_cranelift&lt;/code&gt;?&lt;/h2&gt;
-&lt;p&gt;&lt;a href&#x3D;&quot;https://github.com/bjorn3/rustc_codegen_cranelift&quot;&gt;&lt;code&gt;rustc_codegen_cranelift&lt;/code&gt;&lt;/a&gt;, or just &lt;code&gt;cg_clif&lt;/code&gt; for short, is a new experimental
-codegen backend for the Rust compiler. The existing backend is LLVM, which is very
-good at producing fast, highly optimized code, but is not very good at
-compiling code quickly. &lt;code&gt;cg_clif&lt;/code&gt;, which uses the &lt;a href&#x3D;&quot;https://github.com/bytecodealliance/wasmtime/tree/main/cranelift#cranelift-code-generator&quot;&gt;Cranelift&lt;/a&gt; project, would
-provide a fast backend which greatly improves compile times, at the cost of
-performing very few optimizations. This is a great fit for debug builds, and the hope is
-that &lt;code&gt;cg_clif&lt;/code&gt; will eventually be the default backend in debug mode.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#what-is-the-progress-of-using-rustc_codegen_cranelift-for-debug-builds&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;what-is-the-progress-of-using-rustc_codegen_cranelift-for-debug-builds&quot;&gt;&lt;/a&gt;What is the progress of using &lt;code&gt;rustc_codegen_cranelift&lt;/code&gt; for debug builds?&lt;/h2&gt;
-&lt;p&gt;There has been a &lt;a href&#x3D;&quot;https://forge.rust-lang.org/compiler/mcp.html&quot;&gt;Major Change Proposal&lt;/a&gt; open for some time for making
-&lt;code&gt;cg_clif&lt;/code&gt; part of the main Rust repository. Recently, &lt;a href&#x3D;&quot;https://github.com/rust-lang/compiler-team/issues/270&quot;&gt;the MCP was
-accepted&lt;/a&gt; and the compiler team &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pull/77975&quot;&gt;merged&lt;/a&gt;
-&lt;code&gt;rustc_cranelift_codegen&lt;/code&gt; &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pull/77975&quot;&gt;into the main Rust git repository&lt;/a&gt;.
-&lt;code&gt;cg_clif&lt;/code&gt; is not yet distributed with &lt;code&gt;rustup&lt;/code&gt;, but this means you can now
-build it from source in-tree!&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#how-do-i-use-rustc_codegen_cranelift&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;how-do-i-use-rustc_codegen_cranelift&quot;&gt;&lt;/a&gt;How do I use &lt;code&gt;rustc_codegen_cranelift&lt;/code&gt;?&lt;/h2&gt;
-&lt;p&gt;In this section, I&#x27;ll walk through step-by-step how to build the new backend from source, then use it on your own projects. All code is copy/paste-able, and each step is explained.&lt;/p&gt;
-&lt;p&gt;First, let&#x27;s build &lt;code&gt;cg_clif&lt;/code&gt; from source.&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-sh&quot;&gt;$ git clone https://github.com/bjorn3/rustc_codegen_cranelift.git
-$ ./prepare.sh
-$ ./build.sh
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Now, we can start using it to compile a project. For demonstration purposes,
-I&#x27;ll be be using &lt;code&gt;cargo&lt;/code&gt;, but you can use any Rust project supported by
-&lt;code&gt;cg_clif&lt;/code&gt;.&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;$ cd ..
-$ git clone https://github.com/rust-lang/cargo/
-$ cd cargo
-$ ../rustc_codegen_cranelift/build/cargo.sh build
-...
-    Finished dev [unoptimized + debuginfo] target(s) in 49.93s
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;It works! For comparison, let&#x27;s see how long the equivalent LLVM backend would
-take.&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-sh&quot;&gt;$ rustup install nightly-2020-10-31
-$ cargo +nightly-2020-10-31 build
-...
-    Finished dev [unoptimized + debuginfo] target(s) in 54.64s
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;LLVM takes a full 5 seconds longer for a full build. Next, let&#x27;s try incremental builds:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;$ git apply &amp;lt;&amp;lt;EOF
-diff --git a/src/cargo/lib.rs b/src/cargo/lib.rs
-index bccb41121..703afa754 100644
---- a/src/cargo/lib.rs
-+++ b/src/cargo/lib.rs
-@@ -36,8 +36,8 @@ use anyhow::Error;
- use log::debug;
- use std::fmt;
- 
--pub use crate::util::errors::{InternalError, VerboseError};
- pub use crate::util::{CargoResult, CliError, CliResult, Config};
-+pub use crate::util::errors::{InternalError, VerboseError};
- 
- pub const CARGO_ENV: &amp;amp;str &#x3D; &amp;quot;CARGO&amp;quot;;
-EOF
-$ ../rustc_codegen_cranelift/build/cargo.sh build
-    Finished dev [unoptimized + debuginfo] target(s) in 7.98s
-$ cargo +nightly-2020-10-31 build
-   Compiling cargo v0.50.0 (/home/joshua/cargo)
-    Finished dev [unoptimized + debuginfo] target(s) in 5.48s
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;LLVM is actually &lt;em&gt;faster&lt;/em&gt; here: &lt;code&gt;serde_derive&lt;/code&gt; took longer to run under cranelift, since it wasn&#x27;t as optimized. Under cranelift it takes ~14% percent of the time, while under LLVM it takes less than 3%.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#building-in-tree&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;building-in-tree&quot;&gt;&lt;/a&gt;Building in-tree&lt;/h2&gt;
-&lt;p&gt;This section is mostly for compiler hackers, but feel free to follow along even
-if you&#x27;re just interested! The reason this isn&#x27;t the recommended way to build
-&lt;code&gt;cg_clif&lt;/code&gt; is because the Rust compiler takes a very long time to build.&lt;/p&gt;
-&lt;p&gt;First, download the Rust repository.&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-console&quot;&gt;git clone https://github.com/rust-lang/rust
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Now, let&#x27;s set up the build system to use &lt;code&gt;cg_clif&lt;/code&gt;.&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-text&quot;&gt;$ cat &amp;gt; config.toml &amp;lt;&amp;lt;EOF
-[rust]
-codegen-backends &#x3D; [&amp;quot;cranelift&amp;quot;]
-EOF
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Finally, let&#x27;s run the build. This can take a long time, over a half-hour in some cases.&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-console&quot;&gt;./x.py build
-&lt;/code&gt;&lt;/pre&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#how-can-i-help&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;how-can-i-help&quot;&gt;&lt;/a&gt;How can I help?&lt;/h2&gt;
-&lt;p&gt;You don&#x27;t need to be a compiler developer to help improve &lt;code&gt;cg_clif&lt;/code&gt;!  The best
-way you can help is by testing &lt;code&gt;cg_clif&lt;/code&gt; on different Rust crates across the
-ecosystem.  Just while writing this article, I found &lt;a href&#x3D;&quot;https://github.com/bjorn3/rustc_codegen_cranelift/issues/1102&quot;&gt;two&lt;/a&gt;
-&lt;a href&#x3D;&quot;https://github.com/bjorn3/rustc_codegen_cranelift/issues/1101&quot;&gt;bugs&lt;/a&gt;, so there&#x27;s plenty of work left to be done. Please report any bugs you find
-to the &lt;a href&#x3D;&quot;https://github.com/bjorn3/rustc_codegen_cranelift/issues/new&quot;&gt;&lt;code&gt;rustc_codegen_cranelift&lt;/code&gt; git repository&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;In the future, we hope to distribute &lt;code&gt;cg_clif&lt;/code&gt; with Rustup, and if it matures sufficiently, eventually make it the default backend for debug builds.&lt;/p&gt;
+        <title>2021 Annual Survey Report</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/06/21/survey-2021-report.html" type="text/html" title="2021 Annual Survey Report" />
+        <published>2022-06-21T00:00:00+00:00</published>
+        <updated>2022-06-21T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/06/21/survey-2021-report.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/06/21/survey-2021-report.html">&lt;p&gt;As usual, we conducted an annual community survey in 2021. We previously shared some some highlights and charts
+in a &lt;a href&#x3D;&quot;https://blog.rust-lang.org/2022/02/15/Rust-Survey-2021.html&quot;&gt;blog post&lt;/a&gt;. This year we would also like to
+make the complete (-ish) dataset available. We have compiled a report which contains data and charts for nearly
+all questions with minimal analysis. We have elided a few sensitive questions and have combined some answers
+or elided some answers where there is any chance of respondents being identified or of sensitive data being released.&lt;/p&gt;
+&lt;p&gt;We intend to produce further small reports with more analysis targetted at specific teams or groups within the
+project. If there is any analysis or processed data you&#x27;d like to see, please get in touch with the survey working group via
+&lt;a href&#x3D;&quot;https://rust-lang.zulipchat.com/#narrow/stream/294169-t-community.2Frust-survey-2021&quot;&gt;Zulip&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Once again, we&#x27;d like to thank all the respondents, our translators, and everyone else who helped to make the survey a success!&lt;/p&gt;
+&lt;p&gt;&lt;a href&#x3D;&quot;https://github.com/rust-lang/surveys/raw/main/surveys/2021-annual-survey/2021-annual-survey-summary.pdf&quot;&gt;Download the report&lt;/a&gt;.&lt;/p&gt;
 </content>
 
         <author>
-            <name>Joshua Nelson</name>
+            <name>Nick Cameron</name>
         </author>
     </entry>
     
     <entry>
-        <title>Source-based code coverage in nightly</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/11/12/source-based-code-coverage.html" type="text/html" title="Source-based code coverage in nightly" />
-        <published>2020-11-12T00:00:00+00:00</published>
-        <updated>2020-11-12T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/11/12/source-based-code-coverage.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/11/12/source-based-code-coverage.html">&lt;p&gt;Support has landed in the nightly compiler for source-based code coverage,
-and we want your help testing it!&lt;/p&gt;
-&lt;h1&gt;&lt;a href&#x3D;&quot;#what-is-source-based-code-coverage-exactly&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;what-is-source-based-code-coverage-exactly&quot;&gt;&lt;/a&gt;What is &lt;em&gt;source-based&lt;/em&gt; code coverage, exactly?&lt;/h1&gt;
-&lt;p&gt;You may already be familiar with code coverage, which shows you which lines
-of code execute. Code coverage is usually applied to tests to find out which
-code is actually being tested and which code isn’t.&lt;/p&gt;
-&lt;p&gt;Nightly Rust already supports another kind of source code coverage, commonly
-called gcov, which relies on debug info to map from LLVM IR to lines of
-source code. Instrumentation is then added in the LLVM backend during code
-generation to count how many times each line is run.&lt;/p&gt;
-&lt;p&gt;However, since LLVM doesn’t know exactly how Rust code is structured, there’s
-a lot lost in the translation between Rust source and LLVM IR. Line-level
-granularity is sometimes too coarse, and debug info can be unreliable,
-especially when building in release mode. The result is coverage reports that
-only show an approximation of what code actually executed.&lt;/p&gt;
-&lt;p&gt;Source-based code coverage instrumentation is applied by the Rust compiler,
-not LLVM. This instrumentation is more precise because it&#x27;s being done in
-MIR, which holds a mapping between the original Rust source code and the
-control-flow graph of the program.&lt;/p&gt;
-&lt;p&gt;That means things like short-circuited conditionals, closures, and match
-guards are all precisely counted. And since instrumentation counters are
-injected as regular MIR statements, the compiler can further optimize the
-program without affecting coverage results.&lt;/p&gt;
-&lt;p&gt;&lt;a href&#x3D;&quot;/images/inside-rust/2020-11-12-source-based-code-coverage/comparison.png&quot;&gt;&lt;img src&#x3D;&quot;/images/inside-rust/2020-11-12-source-based-code-coverage/comparison.png&quot; alt&#x3D;&quot;Comparison of gcov and source-based coverage results&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;em&gt;Above: A comparison of the gcov (left) and source-based coverage (right)
-results. gcov highlights skipped lines, marked with #####, while source-based
-coverage highlights exact regions of code that were skipped. Note that on
-line 30, one boolean subexpression is short-circuited. This is surfaced by
-source-based coverage but not gcov.&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;What this means is that source-based code coverage is both efficient and
-accurate. LLVM’s existing coverage tools (&lt;a href&#x3D;&quot;https://llvm.org/docs/CommandGuide/llvm-profdata.html&quot;&gt;llvm-profdata&lt;/a&gt; and &lt;a href&#x3D;&quot;https://llvm.org/docs/CommandGuide/llvm-cov.html&quot;&gt;llvm-cov&lt;/a&gt;)
-generate both coverage summaries and very fine-grained code regions, helping
-you find gaps in your testing coverage. What you do about that is up to you!&lt;/p&gt;
-&lt;h1&gt;&lt;a href&#x3D;&quot;#trying-it-out&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;trying-it-out&quot;&gt;&lt;/a&gt;Trying it out&lt;/h1&gt;
-&lt;p&gt;Work on the implementation &lt;a href&#x3D;&quot;https://github.com/rust-lang/compiler-team/issues/278&quot;&gt;began back in April&lt;/a&gt;, and &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pulls?q&#x3D;is%3Apr+author%3Arichkadel+is%3Aclosed+closed%3A%3C2020-11-06&quot;&gt;many PRs
-later&lt;/a&gt;, it’s ready for you to try. All you need is a recent nightly and
-a tool to read the coverage reports.&lt;/p&gt;
-&lt;p&gt;&lt;a href&#x3D;&quot;https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/source-based-code-coverage.html&quot;&gt;Take a look at this guide to get started&lt;/a&gt;. If you spot any issues,
-please &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/new/choose&quot;&gt;report them&lt;/a&gt;. It’s a huge help!&lt;/p&gt;
-&lt;p&gt;Finally, if you try it out and it works well, we’d also like to hear from
-you! Come by the &lt;a href&#x3D;&quot;https://rust-lang.zulipchat.com/#narrow/stream/233931-t-compiler.2Fmajor-changes/topic/Implement.20LLVM-compatible.20source-based.20cod.20compiler-team.23278&quot;&gt;Zulip stream&lt;/a&gt; for this change or comment on the &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/34701&quot;&gt;feature
-request&lt;/a&gt;.&lt;/p&gt;
-&lt;h1&gt;&lt;a href&#x3D;&quot;#acknowledgements&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;acknowledgements&quot;&gt;&lt;/a&gt;Acknowledgements&lt;/h1&gt;
-&lt;p&gt;The implementation work was all done by Rich Kadel; thanks to him for all the
-amazing work he’s done. Thanks also to Wesley Wiser for helping with reviews,
-to Bob Wilson for lending his experience with LLVM&#x27;s InstrProf coverage APIs,
-and to eddyb for their guidance in choosing a MIR-based approach.&lt;/p&gt;
+        <title>Rust Compiler June 2022 Steering Cycle</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/06/03/jun-steering-cycle.html" type="text/html" title="Rust Compiler June 2022 Steering Cycle" />
+        <published>2022-06-03T00:00:00+00:00</published>
+        <updated>2022-06-03T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/06/03/jun-steering-cycle.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/06/03/jun-steering-cycle.html">&lt;p&gt;On &lt;a href&#x3D;&quot;https://rust-lang.zulipchat.com/#narrow/stream/238009-t-compiler.2Fmeetings/topic/.5Bplanning.20meeting.5D.202022-06-03/near/284883023&quot;&gt;Friday, June 3rd&lt;/a&gt;, the Rust Compiler team had a planning meeting for the June 2022 steering cycle.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; This schedule has changed since this post was first published: the dates of the first two meetings were revised.&lt;/p&gt;
+&lt;h3&gt;&lt;a href&#x3D;&quot;#t-compiler-june-steering-schedule&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;t-compiler-june-steering-schedule&quot;&gt;&lt;/a&gt;T-compiler June Steering Schedule&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Date&lt;/th&gt;
+&lt;th&gt;Meeting Id&lt;/th&gt;
+&lt;th&gt;Meeting Topic&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href&#x3D;&quot;https://calendar.google.com/event?action&#x3D;TEMPLATE&amp;tmeid&#x3D;NHY4Y3VmdXZqcWJxOWgzOXVyZWM5a3JjaWUgNnU1cnJ0Y2U2bHJ0djA3cGZpM2RhbWdqdXNAZw&amp;tmsrc&#x3D;6u5rrtce6lrtv07pfi3damgjus%40group.calendar.google.com&quot;&gt;2022-06-10&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href&#x3D;&quot;https://github.com/rust-lang/compiler-team/issues/517&quot;&gt;compiler-team#517&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;2022 Q2 P-high review&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href&#x3D;&quot;https://calendar.google.com/event?action&#x3D;TEMPLATE&amp;tmeid&#x3D;Nm8xbGtqbHBzMjdpcTRjcHAybmw4a3Y0ZjEgNnU1cnJ0Y2U2bHJ0djA3cGZpM2RhbWdqdXNAZw&amp;tmsrc&#x3D;6u5rrtce6lrtv07pfi3damgjus%40group.calendar.google.com&quot;&gt;2022-06-17&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href&#x3D;&quot;https://github.com/rust-lang/compiler-team/issues/516&quot;&gt;compiler-team#516&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;path sanitisation changes &lt;a href&#x3D;&quot;https://github.com/rust-lang/rfcs/issues/3127&quot;&gt;rfc#3127&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href&#x3D;&quot;https://calendar.google.com/calendar/event?eid&#x3D;MmE2azQyb2ViODQ4NWwxMWViMzJka2g0cjIgNnU1cnJ0Y2U2bHJ0djA3cGZpM2RhbWdqdXNAZw&amp;ctz&#x3D;GMT-04:00&quot;&gt;2022-06-24&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href&#x3D;&quot;https://github.com/rust-lang/compiler-team/issues/484&quot;&gt;compiler-team#484&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;Compiler Feature Backlog Bonanza&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href&#x3D;&quot;https://calendar.google.com/calendar/event?eid&#x3D;MDJyYnJ1cGFtdWR1c2lnNjFmcHJ2b3JlODFfMjAyMjA3MDFUMTQwMDAwWiA2dTVycnRjZTZscnR2MDdwZmkzZGFtZ2p1c0Bn&amp;ctz&#x3D;GMT-04:00&quot;&gt;2022-07-01&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;none&lt;/td&gt;
+&lt;td&gt;(planning for July cycle)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3&gt;&lt;a href&#x3D;&quot;#details&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;details&quot;&gt;&lt;/a&gt;Details&lt;/h3&gt;
+&lt;p&gt;Every fourth Friday, the Rust compiler team decides how
+it is going to use its scheduled steering and design meeting time over the next
+three Fridays.&lt;/p&gt;
+&lt;p&gt;On Friday, 10 June, we will be doing a quarterly &lt;a href&#x3D;&quot;https://github.com/rust-lang/compiler-team/issues/517&quot;&gt;review of the open P-high issues&lt;/a&gt;.
+pnkfelix will do some ahead of time work triaging
+some of the issues, and potentially prepare a meeting document summarizing the
+remainder, to maximize the quality of our synchronous in-meeting time.&lt;/p&gt;
+&lt;p&gt;On Friday, 17 June, we will review &lt;a href&#x3D;&quot;https://github.com/rust-lang/rfcs/issues/3127&quot;&gt;RFC PR #3127&lt;/a&gt;, which proposes
+new rustc and Cargo options to allow path sanitisation by default.&lt;/p&gt;
+&lt;p&gt;On Friday, 24 June, we will be having a &lt;a href&#x3D;&quot;https://github.com/rust-lang/compiler-team/issues/484&quot;&gt;&amp;quot;backlog bonanza&amp;quot;&lt;/a&gt;, in a
+similar vein to that done by T-lang, to review the list of unimplemented or
+partially-implemented features. pnkfelix and Jack Huey will prepare a document
+to drive the meeting.&lt;/p&gt;
+&lt;p&gt;On Friday, 1 July, we will hold our planning meeting for the next steering cycle in July.&lt;/p&gt;
+&lt;p&gt;Each meeting will run from 2pm to 3pm GMT, and will take place on the
+&lt;a href&#x3D;&quot;https://rust-lang.zulipchat.com/#narrow/stream/238009-t-compiler.2Fmeetings&quot;&gt;T-compiler/meetings zulip stream&lt;/a&gt;.&lt;/p&gt;
 </content>
 
         <author>
-            <name>Tyler Mandry</name>
+            <name>Felix Klock</name>
         </author>
     </entry>
     
     <entry>
-        <title>Exploring PGO for the Rust compiler</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/11/11/exploring-pgo-for-the-rust-compiler.html" type="text/html" title="Exploring PGO for the Rust compiler" />
-        <published>2020-11-11T00:00:00+00:00</published>
-        <updated>2020-11-11T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/11/11/exploring-pgo-for-the-rust-compiler.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/11/11/exploring-pgo-for-the-rust-compiler.html">&lt;p&gt;&lt;strong&gt;TLDR&lt;/strong&gt; -- PGO makes the compiler &lt;a href&#x3D;&quot;#final-numbers-and-a-benchmarking-plot-twist&quot;&gt;faster&lt;/a&gt; but is &lt;a href&#x3D;&quot;#where-to-go-from-here&quot;&gt;not straightforward&lt;/a&gt; to realize in CI.&lt;/p&gt;
-&lt;p&gt;For the last few months Mozilla has been using Profile-Guided Optimization (PGO) to build their own &lt;a href&#x3D;&quot;https://bugzilla.mozilla.org/show_bug.cgi?id&#x3D;1326486&quot;&gt;optimized version of Clang&lt;/a&gt;, leading to an up to 9% reduction of Firefox compile times on their build infrastructure.
-Would the same be possible for the Rust compiler, that is, could we apply profile-guided optimization to &lt;em&gt;rustc&lt;/em&gt; itself in order to make it faster?
-This post explores exactly this question, detailing first the steps needed for generating a PGOed versions of &lt;em&gt;rustc&lt;/em&gt; (in two flavors), and then taking a look at the resulting performance implications.
-But before that let&#x27;s have a little reminder what PGO even is and how it works in general.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#pgo-primer&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;pgo-primer&quot;&gt;&lt;/a&gt;PGO Primer&lt;/h2&gt;
-&lt;p&gt;Here is how the respective &lt;a href&#x3D;&quot;https://doc.rust-lang.org/rustc/profile-guided-optimization.html&quot;&gt;chapter from the rustc book&lt;/a&gt; describes profile-guided optimization:&lt;/p&gt;
+        <title>Concluding the events of last November</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/05/26/Concluding-events-mods.html" type="text/html" title="Concluding the events of last November" />
+        <published>2022-05-26T00:00:00+00:00</published>
+        <updated>2022-05-26T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/05/26/Concluding-events-mods.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/05/26/Concluding-events-mods.html">&lt;p&gt;&lt;a href&#x3D;&quot;https://blog.rust-lang.org/inside-rust/2021/11/25/in-response-to-the-moderation-team-resignation.html&quot;&gt;With the moderators&#x27; resignation in November&lt;/a&gt;, we (Josh Gould and Khionu Sybiern) had the mantle of the Moderation Team offered to us, and we caught up to speed on what led up to this conflict. Their resignation became a catalyst, and we commited with the rest of the project leadership to do our best to solve the issues present and going forward.&lt;/p&gt;
+&lt;p&gt;After these months, the following update was shared with core and team leaders:&lt;/p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;The basic concept of PGO is to collect data about the typical execution of a program (e.g. which branches it is likely to take) and then use this data to inform optimizations such as inlining, machine-code layout, register allocation, etc.&lt;/p&gt;
-&lt;p&gt;There are different ways of collecting data about a program&#x27;s execution. One is to run the program inside a profiler (such as perf) and another is to create an instrumented binary, that is, a binary that has data collection built into it, and run that. The latter usually provides more accurate data and it is also what is supported by &lt;code&gt;rustc&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The moderation issue has been brought to a resolution. This case was open for an unsually long time, which made this process a considerably worse experience than necessary for all involved. This was caused in part due to the lack of well defined procedures and the underspecified governance structure of the project. Another major factor was the complexity of the situation: it was not a simple case of a CoC violation, but rather a long-standing collaboration and communication issue involving interpersonal conflict and burnout. While we consider this case resolved, we very much recognize the harm that has been done by how the situation was handled, and will continue to work on improving the way we avoid and handle these kind of issues in the future.&lt;/p&gt;
+&lt;p&gt;It should be noted that all involved parties are considered in good standing with the project.&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;In other words, we first generate a special, &amp;quot;instrumented&amp;quot; version of the program we want to optimize, and then use this instrumented version to generate an execution profile.
-This execution profile is then used by the compiler for better optimizing the actual, final version of the program.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#how-to-apply-pgo-to-the-rust-compiler&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;how-to-apply-pgo-to-the-rust-compiler&quot;&gt;&lt;/a&gt;How to apply PGO to the Rust compiler&lt;/h2&gt;
-&lt;p&gt;Generating a PGOed version of &lt;em&gt;rustc&lt;/em&gt; involves the same basic steps as it does for any other kind of program:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;Create an instrumented version of &lt;em&gt;rustc&lt;/em&gt;.&lt;/li&gt;
-&lt;li&gt;Use the instrumented version of &lt;em&gt;rustc&lt;/em&gt; in order to collect profile data, i.e. compile a bunch of programs with it, ideally in a way that represents the typical use cases of the compiler.&lt;/li&gt;
-&lt;li&gt;Compile the final version of &lt;em&gt;rustc&lt;/em&gt;, this time pointing the build system to the profile data we generated in the previous step.&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;However, as opposed to many other programs, &lt;em&gt;rustc&lt;/em&gt; is a bit of a special case because it consists of two very large chunks of code written in different programming languages: the LLVM backend (written in C++) and the front and middle parts of the compiler (written in Rust).
-Consequently, there are also two separate compilers involved in building &lt;em&gt;rustc&lt;/em&gt; -- both of which support their own version of PGO.
-This complicates things slightly but fortunately the PGO setup for each of the two components can be treated in isolation.
-Let&#x27;s take a look at the LLVM part first, since that is slightly simpler.&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#compiling-rustcs-llvm-with-pgo&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;compiling-rustcs-llvm-with-pgo&quot;&gt;&lt;/a&gt;Compiling rustc&#x27;s LLVM with PGO&lt;/h3&gt;
-&lt;p&gt;PGO is a toolchain specific feature, so how it works might be different for different C++ compilers.
-In this article I will only go into how it works with Clang because (a) I have no experience with PGO in other compilers, and (b) Clang is what the Rust project actually uses in production.&lt;/p&gt;
-&lt;p&gt;In order to enable PGO for rustc&#x27;s LLVM we basically follow the steps laid out in the previous section.&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;
-&lt;p&gt;We make sure that our LLVM gets instrumented by applying the following changes to the &lt;code&gt;config.toml&lt;/code&gt; file in the root directory of our Rust checkout:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-toml&quot;&gt;[llvm]
-
-# Pass extra compiler and linker flags to the LLVM CMake build.
-# &amp;lt;PROFDATA_DIR&amp;gt; must be an absolute path to a writeable
-# directory, like for example /tmp/my-rustc-profdata
-cflags &#x3D; &amp;quot;-fprofile-generate&#x3D;&amp;lt;PROFDATA_DIR&amp;gt;&amp;quot;
-cxxflags &#x3D; &amp;quot;-fprofile-generate&#x3D;&amp;lt;PROFDATA_DIR&amp;gt;&amp;quot;
-
-# Make sure that LLVM is built as a dylib
-link-shared &#x3D; true
-
-# Make sure we use Clang for compiling LLVM
-# (assuming that we are building for x86_64 Linux in this case)
-[target.x86_64-unknown-linux-gnu]
-cc &#x3D; &amp;quot;clang&amp;quot;
-cxx &#x3D; &amp;quot;clang++&amp;quot;
-linker &#x3D; &amp;quot;clang&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The &lt;code&gt;-fprofile-generate&lt;/code&gt; flag tells Clang to create an instrumented binary that will write any profile data it generates to the given directory.
-It is advisable to always use an absolute path here since we don&#x27;t want things to depend on the working directory of the compiler.
-We also set &lt;code&gt;link-shared &#x3D; true&lt;/code&gt; which makes sure that &lt;em&gt;rustc&lt;/em&gt;&#x27;s linker does not have to deal with linking the instrumentation runtime into C++ code.
-It&#x27;s possible to make that work but it&#x27;s not worth the trouble.
-Now we just need to run &lt;code&gt;./x.py build&lt;/code&gt; and wait until we have a working &lt;em&gt;rustc&lt;/em&gt; with an instrumented LLVM.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;Next we collect profile data by running the compiler we built in the previous step.
-This is straightforward because data collection happens completely transparently.
-Just run the compiler as you always would (e.g. via Cargo) and the profile data will show up in the &lt;code&gt;&amp;lt;PROFDATA_DIR&amp;gt;&lt;/code&gt; we specified in the &lt;code&gt;-fprofile-generate&lt;/code&gt; flag above.
-In order to make the collected data as useful as possible, we should try to exercise all the common code paths within the compiler.
-I typically use the &amp;quot;standard&amp;quot; &lt;a href&#x3D;&quot;https://github.com/rust-lang/rustc-perf&quot;&gt;rustc-perf&lt;/a&gt; benchmark suite for this purpose, which includes debug builds, optimized builds, check builds, both incremental and non-incremental.
-After this is done, you will find a number of &lt;code&gt;.profraw&lt;/code&gt; files in &lt;code&gt;&amp;lt;PROFDATA_DIR&amp;gt;&lt;/code&gt;.
-&lt;a href&#x3D;&quot;https://clang.llvm.org/docs/UsersManual.html#cmdoption-fprofile-generate&quot;&gt;As described in the Clang user manual&lt;/a&gt; these &lt;code&gt;.profraw&lt;/code&gt; files need to be merged into a single &lt;code&gt;.profdata&lt;/code&gt; file by using the &lt;code&gt;llvm-profdata&lt;/code&gt; tool that comes with your Clang installation:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-bash&quot;&gt;$ cd &amp;lt;PROFDATA_DIR&amp;gt;
-$ llvm-profdata merge -output&#x3D;rustc-llvm.profdata *.profraw
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;ol start&#x3D;&quot;3&quot;&gt;
-&lt;li&gt;
-&lt;p&gt;Now that the combined profile data from all &lt;em&gt;rustc&lt;/em&gt; invocations can be found in &lt;code&gt;&amp;lt;PROFDATA_DIR&amp;gt;/rustc-llvm.profdata&lt;/code&gt; it is time to re-compile LLVM and &lt;em&gt;rustc&lt;/em&gt; again, this time instructing Clang to make use of this valuable new information.
-To this end we modify &lt;code&gt;config.toml&lt;/code&gt; as follows:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-toml&quot;&gt;[llvm]
-# Instead of -fprofile-generate, we now pass -fprofile-use to Clang
-cflags &#x3D; &amp;quot;-fprofile-use&#x3D;&amp;lt;PROFDATA_DIR&amp;gt;/rustc-llvm.profdata&amp;quot;
-cxxflags &#x3D; &amp;quot;-fprofile-use&#x3D;&amp;lt;PROFDATA_DIR&amp;gt;/rustc-llvm.profdata&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Now we make sure that LLVM is properly rebuilt by deleting the old version and build everything again:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-bash&quot;&gt;$ cd $RUST_PROJECT_ROOT
-$ rm -rf ./build/x86_64-unknown-linux-gnu/llvm
-$ ./x.py build
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Once this is done, we have a Rust compiler with PGO-optimized LLVM. Congratulations!&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;h4&gt;&lt;a href&#x3D;&quot;#pgo-optimized-llvm----benchmark-results&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;pgo-optimized-llvm----benchmark-results&quot;&gt;&lt;/a&gt;PGO-optimized LLVM -- Benchmark Results&lt;/h4&gt;
-&lt;p&gt;As mentioned above Firefox build times have improved by up to 9% with a PGOed compiler.
-Clang&#x27;s own documentation even &lt;a href&#x3D;&quot;https://www.llvm.org/docs/HowToBuildWithPGO.html#introduction&quot;&gt;reports&lt;/a&gt; an up to 20% improvement.
-The best way we have for assessing the Rust compiler&#x27;s performance is the &lt;a href&#x3D;&quot;https://github.com/rust-lang/rustc-perf&quot;&gt;rustc-perf&lt;/a&gt; benchmark suite.
-Since compiling with PGO does not quite fit with how the Rust project&#x27;s CI works, we cannot use the &lt;a href&#x3D;&quot;https://perf.rust-lang.org/&quot;&gt;perf.rust-lang.org&lt;/a&gt; version of the benchmark suite.
-Fortunately, thanks to &lt;a href&#x3D;&quot;https://github.com/rust-lang/rustc-perf/blob/master/collector/README.md&quot;&gt;good documentation&lt;/a&gt;, running the benchmarks locally is straightforward enough.
-Here&#x27;s a glance at the effect that a PGOed LLVM has on &lt;em&gt;rustc&lt;/em&gt;&#x27;s performance:&lt;/p&gt;
-&lt;p&gt;&lt;a href&#x3D;&quot;https://perf.rust-lang.org/compare.html?start&#x3D;pgo-2020-10-30-none&amp;end&#x3D;pgo-2020-10-30-llvm&amp;stat&#x3D;instructions%3Au&quot;&gt;&lt;img src&#x3D;&quot;/images/inside-rust/2020-11-11-exploring-pgo-for-the-rust-compiler/rustc-perf-pgo-llvm-thumb.png&quot; alt&#x3D;&quot;Performance improvements gained from apply PGO to LLVM&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;The results are not quite as spectacular as the anecdotal 20% improvement from Clang&#x27;s documentation;
-but they are pretty encouraging and show no significant performance regressions.
-Diving more into details shows the expected profile:&lt;/p&gt;
-&lt;p&gt;&lt;img src&#x3D;&quot;/images/inside-rust/2020-11-11-exploring-pgo-for-the-rust-compiler/rustc-perf-pgo-llvm-expanded.png&quot; alt&#x3D;&quot;Performance improvements gained from apply PGO to LLVM (details)&quot; /&gt;&lt;/p&gt;
-&lt;p&gt;Workloads that spend most of their time in LLVM (e.g. optimized builds) show the most improvement, while workloads that don&#x27;t invoke LLVM at all (e.g. check builds) also don&#x27;t profit from a faster LLVM.
-Let&#x27;s take a look at how we can take things further by applying PGO to the other half of the compiler.&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#applying-pgo-to-the-rust-part-of-the-compiler&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;applying-pgo-to-the-rust-part-of-the-compiler&quot;&gt;&lt;/a&gt;Applying PGO to the Rust part of the compiler&lt;/h3&gt;
-&lt;p&gt;The basic principle stays the same:
-create an instrumented compiler, use it to collect profile data, use that data when compiling the final version of the compiler.
-The only difference is that this time we instrument a different part of the compiler&#x27;s code, namely the part generated by &lt;em&gt;rustc&lt;/em&gt; itself.
-The compiler has had support for doing that &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pull/61268&quot;&gt;for a while now&lt;/a&gt; and, as can be seen in the &lt;a href&#x3D;&quot;https://doc.rust-lang.org/rustc/profile-guided-optimization.html&quot;&gt;respective chapter of the rustc book&lt;/a&gt;, the command-line interface has been modeled after Clang&#x27;s set of flags.
-Unfortunately, the compiler&#x27;s build system does not support using PGO out of the box, so we have to directly modify &lt;code&gt;src/bootstrap/compile.rs&lt;/code&gt; in order to set the desired flags.
-We only want to instrument the compiler itself, not the other tools or the standard library, see we add the flags to &lt;code&gt;rustc_cargo_env()&lt;/code&gt;:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-rust&quot;&gt;pub fn rustc_cargo_env(builder: &amp;amp;Builder&amp;lt;&#x27;_&amp;gt;,
-                       cargo: &amp;amp;mut Cargo,
-                       target: TargetSelection) {
-    // ... omitted ...
-
-    if builder.config.rustc_parallel {
-        cargo.rustflag(&amp;quot;--cfg&#x3D;parallel_compiler&amp;quot;);
-    }
-    if builder.config.rust_verify_llvm_ir {
-        cargo.env(&amp;quot;RUSTC_VERIFY_LLVM_IR&amp;quot;, &amp;quot;1&amp;quot;);
-    }
-
-    // This is new: Hard code instrumentation in the
-    // RUSTFLAGS of the Cargo invocation that builds
-    // the compiler
-    cargo.rustflag(&amp;quot;-Cprofile-generate&#x3D;&amp;lt;PROFDATA_DIR&amp;gt;&amp;quot;);
-
-    // ... omitted ...
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;As before &lt;code&gt;&amp;lt;PROFDATA_DIR&amp;gt;&lt;/code&gt; must be an actual, absolute path to a directory.
-Once we have collected enough profile data, we go back to &lt;code&gt;src/bootstrap/compile.rs&lt;/code&gt; and replace the &lt;code&gt;-Cprofile-generate&lt;/code&gt; flag with a &lt;code&gt;-Cprofile-use&lt;/code&gt; flag:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-rust&quot;&gt;pub fn rustc_cargo_env(builder: &amp;amp;Builder&amp;lt;&#x27;_&amp;gt;,
-                       cargo: &amp;amp;mut Cargo,
-                       target: TargetSelection) {
-    // ... omitted ...
-
-    if builder.config.rustc_parallel {
-        cargo.rustflag(&amp;quot;--cfg&#x3D;parallel_compiler&amp;quot;);
-    }
-    if builder.config.rust_verify_llvm_ir {
-        cargo.env(&amp;quot;RUSTC_VERIFY_LLVM_IR&amp;quot;, &amp;quot;1&amp;quot;);
-    }
-
-    // Replace &#x60;-Cprofile-generate&#x60; with &#x60;-Cprofile-use&#x60;,
-    // assuming that we used the &#x60;llvm-profdata&#x60; tool to
-    // merge the collected &#x60;&amp;lt;PROFDATA_DIR&amp;gt;/*.profraw&#x60; files
-    // into a common file named
-    // &#x60;&amp;lt;PROFDATA_DIR&amp;gt;/rustc-rust.profdata&#x60;.
-    cargo.rustflag(
-        &amp;quot;-Cprofile-use&#x3D;&amp;lt;PROFDATA_DIR&amp;gt;/rustc-rust.profdata&amp;quot;
-    );
-
-    // ... omitted ...
-}
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Let&#x27;s take a look at the effects PGO has on this portion of the compiler.&lt;/p&gt;
-&lt;h4&gt;&lt;a href&#x3D;&quot;#pgo-optimized-rust----benchmark-results&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;pgo-optimized-rust----benchmark-results&quot;&gt;&lt;/a&gt;PGO-optimized Rust -- Benchmark Results&lt;/h4&gt;
-&lt;p&gt;As expected the results are similar to when PGO was applied to LLVM: a reduction of instruction counts by roughly 5%. NOTE: These numbers show the improvement from applying PGO &lt;em&gt;exclusively&lt;/em&gt; to the Rust part of the compiler. The LLVM part was &lt;em&gt;not&lt;/em&gt; compiled with PGO here:&lt;/p&gt;
-&lt;p&gt;&lt;a href&#x3D;&quot;https://perf.rust-lang.org/compare.html?start&#x3D;pgo-2020-10-30-none&amp;end&#x3D;pgo-2020-10-30-rust&amp;stat&#x3D;instructions%3Au&quot;&gt;&lt;img src&#x3D;&quot;/images/inside-rust/2020-11-11-exploring-pgo-for-the-rust-compiler/rustc-perf-pgo-rust-thumb.png&quot; alt&#x3D;&quot;Performance improvements gained from applying PGO to (only) the Rust part of the compiler&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;Because different workloads execute different amounts of Rust code (vs C++/LLVM code), the total reduction can be a lot less for LLVM-heavy cases.
-For example, a full &lt;em&gt;webrender-opt&lt;/em&gt; build will spend more than 80% of its time in LLVM, so reducing the remaining 20% by 5% can only reduce the total number by 1%.
-On the other hand, a &lt;em&gt;check&lt;/em&gt; build or an &lt;em&gt;incr-unchanged&lt;/em&gt; build spends almost no time in LLVM, so the 5% Rust performance improvement translates almost entirely into a 5% instruction count reduction for these cases:&lt;/p&gt;
-&lt;p&gt;&lt;img src&#x3D;&quot;/images/inside-rust/2020-11-11-exploring-pgo-for-the-rust-compiler/rustc-perf-pgo-rust-expanded.png&quot; alt&#x3D;&quot;Performance improvements gained from applying PGO to (only) the Rust part of the compiler (details)&quot; /&gt;&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#can-we-apply-pgo-to-rust-and-llvm-at-the-same-time&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;can-we-apply-pgo-to-rust-and-llvm-at-the-same-time&quot;&gt;&lt;/a&gt;Can we apply PGO to Rust and LLVM at the same time?&lt;/h3&gt;
-&lt;p&gt;The short answer is &lt;em&gt;yes&lt;/em&gt;.
-The longer answer is that we have to be careful about profile data incompatibilities.
-Both Clang and the Rust compiler use the same LLVM-based PGO mechanisms underneath.
-If both Clang and the Rust compiler use the exact same version of LLVM, we can even combine the two into a single &lt;code&gt;.profdata&lt;/code&gt; file.
-However, if the two LLVM versions are different, we better make sure that the two compilers don&#x27;t get into each other&#x27;s way.
-Luckily it&#x27;s straightforward to facilitate that:&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;
-&lt;p&gt;We need to specify different directories for the respective &lt;code&gt;-fprofile-generate&lt;/code&gt; and &lt;code&gt;-Cprofile-generate&lt;/code&gt; (and &lt;code&gt;*-use&lt;/code&gt;) flags.
-This way the instrumentation code coming from Clang will write into one directory and the code coming from &lt;em&gt;rustc&lt;/em&gt; will write into another.&lt;/p&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;We need to make sure that we use the right &lt;code&gt;llvm-profdata&lt;/code&gt; tool for each set of &lt;code&gt;.profraw&lt;/code&gt; files.
-Use the one coming with Clang for handling the files in the Clang directory and the one coming with the Rust compiler for the files in the Rust directory.&lt;/p&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;If we do that, we get a compiler with both parts optimized via PGO, with the compile time reductions adding up nicely.&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#final-numbers-and-a-benchmarking-plot-twist&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;final-numbers-and-a-benchmarking-plot-twist&quot;&gt;&lt;/a&gt;Final Numbers and a Benchmarking Plot Twist&lt;/h3&gt;
-&lt;p&gt;When I looked at the &lt;a href&#x3D;&quot;https://perf.rust-lang.org/compare.html?start&#x3D;pgo-2020-10-30-none&amp;end&#x3D;pgo-2020-10-30-both&amp;stat&#x3D;instructions%3Au&quot;&gt;the final numbers&lt;/a&gt;, I was a bit underwhelmed.
-Sure, PGO seems to lead to a pretty solid 5% reduction of instruction counts across basically all real world workloads in the benchmark suite, for &lt;em&gt;check&lt;/em&gt;, &lt;em&gt;debug&lt;/em&gt;, and &lt;em&gt;opt&lt;/em&gt; builds alike.
-That is pretty nice -- but also far away from the 20% improvement mentioned in the Clang documentation.
-Given that PGO adds quite a few complications to the build process of the compiler itself (not to mention the almost tripled build times) I started to think that applying PGO to the compiler would probably not be worth the trouble.&lt;/p&gt;
-&lt;p&gt;I then took a glance at the benchmarks&#x27; wall time measurements (instead of the instruction count measurements) and saw quite a different picture: &lt;em&gt;webrender-opt&lt;/em&gt; minus 15%, &lt;em&gt;style-servo-opt&lt;/em&gt; minus 14%, &lt;em&gt;serde-check&lt;/em&gt; minus 15%?
-This looked decidedly better than for instruction counts.
-But wall time measurements can be very noisy (which is why most people only look at instruction counts on perf.rust-lang.org), and &lt;code&gt;rustc-perf&lt;/code&gt; only does a single iteration for each benchmark, so I was not prepared to trust these numbers just yet.
-I decided to try and reduce the noise by increasing the number of benchmark iterations from one to twenty.
-I only did &amp;quot;full&amp;quot; builds in this configuration as PGO&#x27;s effect seemed to translate pretty predictably to incremental builds.
-After roughly eight hours to complete both the PGO and the non-PGO versions of the benchmarks these are the numbers I got:&lt;/p&gt;
-&lt;p&gt;&lt;a href&#x3D;&quot;https://perf.rust-lang.org/compare.html?start&#x3D;pgo-2020-10-30-none-20&amp;end&#x3D;pgo-2020-10-30-both-20&amp;stat&#x3D;wall-time&quot;&gt;&lt;img src&#x3D;&quot;/images/inside-rust/2020-11-11-exploring-pgo-for-the-rust-compiler/rustc-perf-pgo-both-walltime-thumb.png&quot; alt&#x3D;&quot;Wall time improvements gained from applying PGO to the entire compiler&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;As you can see we get a 10-16% reduction of build times almost across the board for real world test cases.
-This was more in line with what I had initially hoped to get from PGO.
-It is a bit surprising that the difference between instruction counts and wall time is so pronounced.
-One plausible explanation would be that PGO improves instruction cache utilization, something which makes a difference for execution time but would not be reflected in the amount of instructions executed.
-I also don&#x27;t know how branch mispredictions factor into instruction counts -- branch prediction being another aspect explicitly targeted by PGO.&lt;/p&gt;
-&lt;p&gt;As good as these numbers look, please keep in mind that they come from a single machine.
-It&#x27;s possible that the Ryzen 1700X processor I used has some idiosyncrasies that favor the kind of optimizations that PGO does, and a different processor with a different caching system and branch predictor would generate quite different numbers.
-Nonetheless, the numbers undoubtedly are very encouraging and warrant further investigation.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#where-to-go-from-here&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;where-to-go-from-here&quot;&gt;&lt;/a&gt;Where to go from here&lt;/h2&gt;
-&lt;p&gt;The numbers above suggest that PGO can indeed provide noticeable compile time reductions.
-Unfortunately, bringing these improvements to end users is not as simple as adding a few compiler flags to our &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/tree/master/src/ci/docker/host-x86_64&quot;&gt;dist builds&lt;/a&gt;.
-PGO is different from most other optimizations in that it&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;requires a different, extended build workflow due to the additional instrumentation and data collection phases, and&lt;/li&gt;
-&lt;li&gt;it incurs a sustained build time cost (a trait it shares with other automated optimizations like LTO).&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Both of these problems pose substantial hurdles for actually using PGO on the compiler itself.
-Rust&#x27;s CI build times have always been too long and we already forgo some optimizations because of them
-(e.g. macOS still does not get the 10% performance boost from using a ThinLTOed LLVM because the build machines on that platform are especially slow).
-However, I think there&#x27;s still a way forward. There&#x27;s a tradeoff between the two obstacles mentioned above:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;If build times are not a problem, then the engineering effort for supporting PGO in the compiler&#x27;s build system is quite low.
-That is, if it is OK for instrumentation, data collection, and final build to all occur as a single monolithic build on the same machine then it should be straightforward to extend the build system to support just that.&lt;/li&gt;
-&lt;li&gt;If a lot of engineering effort is put into a more complicated build setup, with out-of-band instrumentation and caching of profile data, then the impact on build times can be kept quite low.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;I estimate that the first approach is more fruitful, as it is always better to put more value on low engineering and maintenance costs than on low compute times.
-Having a straightforward way of obtaining a PGOed compiler (e.g. by adding a simple setting in &lt;code&gt;config.toml&lt;/code&gt;) would unblock the path to a couple of scenarios:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;Organizations and individuals who don&#x27;t switch compiler versions too frequently can easily compile their own, optimized version of &lt;em&gt;rustc&lt;/em&gt; for internal use, like Mozilla is already doing with Clang.
-Letting a computer spend a couple of hours in order to get a 15% compile time reduction for the next couple of months seems like a good investment.&lt;/li&gt;
-&lt;li&gt;The Rust project itself could start thinking about providing more optimized builds, at least on the beta and stable channels.
-Significantly increasing the compiler&#x27;s build times on the official build infrastructure is a lot more viable if it only has to be done every six weeks instead of for every merged pull request.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;It&#x27;s unlikely that I can spend a lot of time on this personally -- but my hope is that others will pick up the baton. I&#x27;d be happy to provide guidance on how to use PGO specifically.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;PS&lt;/strong&gt; -- Special thanks to Mark Rousskov for uploading my local benchmarking data to &lt;a href&#x3D;&quot;https://perf.rust-lang.org/compare.html?start&#x3D;pgo-2020-10-30-none-20&amp;end&#x3D;pgo-2020-10-30-both-20&amp;stat&#x3D;wall-time&quot;&gt;perf.rust-lang.org&lt;/a&gt;, which makes it much nicer to explore!&lt;/p&gt;
+&lt;p&gt;Bringing a close to this situation is a huge relief, but it is also far from the last step on the journey to recovering as a community. While project leadership &lt;a href&#x3D;&quot;https://blog.rust-lang.org/inside-rust/2022/05/19/governance-update.html&quot;&gt;continues to work on these issues&lt;/a&gt;, the Moderation Team is working on an RFC to create supporting mechanisms to cover a wider range of issues. We&#x27;re working with professionals in mediation and other relevant fields to make sure we are prepared. The RFC additionally will better define areas of moderation that were overlooked and improve collaboration and safety.&lt;/p&gt;
+&lt;p&gt;The number one thing we would like going forward is a stronger two-way relationship between our team and the community. Going forward, we will be asking for your help to make contributing to and using Rust as healthy of an experience as possible.&lt;/p&gt;
 </content>
 
         <author>
-            <name>Michael Woerister</name>
+            <name>Khionu Sybiern</name>
         </author>
     </entry>
     
     <entry>
-        <title>Core team membership changes</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/10/23/Core-team-membership.html" type="text/html" title="Core team membership changes" />
-        <published>2020-10-23T00:00:00+00:00</published>
-        <updated>2020-10-23T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/10/23/Core-team-membership.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/10/23/Core-team-membership.html">&lt;p&gt;The core team has had a few membership updates in the last month, and we wanted to provide an update.&lt;/p&gt;
-&lt;p&gt;To start, Florian Gilcher is joining the Core team as a full member. Florian has been attending meetings as an observer since March 2019. He is the lead of the Community Events team, and has done a lot of work in the open source world, with plenty of insight to offer especially as we look to form a Rust Foundation.&lt;/p&gt;
-&lt;p&gt;There are also two folks stepping back from the team. Carol Nichols has been a member of the team for three years, and she is stepping back to make more time for other projects in the community, including crates.io and her continued work on the Rust book. Nick Cameron &lt;a href&#x3D;&quot;https://www.ncameron.org/blog/leaving-the-rust-core-team/&quot;&gt;has recently welcomed a second child&lt;/a&gt; (congratulations!) and is leaving the core team to be able to focus more on his family and his work at PingCAP. He will continue to be around in the Rust community. Thanks to both Carol and Nick for their hard work over the years — we’ll miss you!&lt;/p&gt;
+        <title>Governance Update</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/05/19/governance-update.html" type="text/html" title="Governance Update" />
+        <published>2022-05-19T00:00:00+00:00</published>
+        <updated>2022-05-19T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/05/19/governance-update.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/05/19/governance-update.html">&lt;p&gt;Last month, the core team, all the leads of top-level teams, the moderators, and the project representatives on the Rust Foundation board jointly sent out an update to all Rust project members on investigations happening into improvements to the governance of the Rust project.&lt;/p&gt;
+&lt;p&gt;As is detailed in the update, this report follows extensive conversations with many inside of the project and will continue as we encourage others in the project to reach out should they have feedback or want to get involved.&lt;/p&gt;
+&lt;p&gt;Since proper governance of the Rust project impacts all users of Rust, we thought it appropriate to also make this summary public. While typos and grammatical fixes have been made since the original post, the text is otherwise unaltered. &lt;sup class&#x3D;&quot;footnote-ref&quot;&gt;&lt;a href&#x3D;&quot;#fn1&quot; id&#x3D;&quot;fnref1&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;p&gt;As is noted in the summary, the next steps are to take the findings we have so far and begin crafting proposals for how the Rust project will be governed in the future. This will eventually lead to RFCs or similar documents with concrete proposals.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;From: Ryan Levick&lt;br /&gt;
+To: All members of the Rust project&lt;br /&gt;
+Date: Mon, 11 Apr 2022 18:27:00 UTC&lt;br /&gt;
+Subject: Rust Governance Update&lt;/p&gt;
+&lt;p&gt;Hey @all,&lt;/p&gt;
+&lt;p&gt;We’d like to provide you with an update to our email from December about the issue that led to the resignation of the moderation team in November. In that email, we indicated that we had three high-level goals:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Improve how we handle complex moderation issues.&lt;/li&gt;
+&lt;li&gt;Bring the specific moderation issue at the center of the disagreement to an adequate resolution.&lt;/li&gt;
+&lt;li&gt;Adapt the governance structure of Rust to better handle the needs of our ever growing project.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In order to accomplish these goals the following actions were taken place:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;We have established better communication channels between the core team, the moderation team, project representatives on the Rust Foundation, and all top-level team leads. Concretely, we’ve established a Zulip chat with everyone for those groups so that we can quickly and confidently reach consensus on how to approach sensitive items related to project management and governance. This has led to better communication around project management issues and allowed for healthy, productive, and good faith collaboration among all project leads. While there are many different ways we can and will improve how project management is done in the Rust project, it was important that we reach a healthy and productive steady state, and we believe we have been able to do so.&lt;/li&gt;
+&lt;li&gt;We have begun exploring possible avenues forward for improving how we handle complex moderation cases including the specific moderation issue in question. While we won’t be diving into detail about this topic in this email, there has been some early progress on better understanding the complexity of this issue. We expect the moderation team in conjunction with project leads to bring forward concrete proposals in the future though this work is somewhat blocked on the next point.&lt;/li&gt;
+&lt;li&gt;In pursuit of the ultimate goal of designing and implementing a revised governance structure for Rust, we have been talking with project members to try to deeply understand the requirements of any such governance structure. This process has started with many different conversations with folks from across the project including over 20 formal interviews of project leaders on the needs of Rust project governance. The remainder of this email will be an attempt to outline our initial findings as well as next steps and opportunities for those who are interested to get more involved.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a href&#x3D;&quot;#your-opportunity-to-participate&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;your-opportunity-to-participate&quot;&gt;&lt;/a&gt;Your opportunity to participate&lt;/h3&gt;
+&lt;p&gt;First, while we believe we are honing in on a clear understanding of the needs for Rust governance, the conversation is not (and likely will never be) over. If you’d like to participate yourself, you can find the interview questions we have used &lt;a href&#x3D;&quot;https://hackmd.io/@ryanlevick/By2RKtMec&quot;&gt;here&lt;/a&gt;. Write your answers in whatever form you wish, and send them back to Mara or me so they can be incorporated into our notes. Please note that your answers will not be shared with anyone and will only be reflected in documents that attempt to summarize overall feedback from project members.&lt;/p&gt;
+&lt;p&gt;We encourage anyone interested in participating to complete the interview before reading the following summary of our findings so far. While every interview brings us closer to a complete understanding of the project management needs of the Rust project, nothing is final yet, and all project members will have the opportunity to provide feedback on any concrete proposals brought forth (most likely in the form of RFCs).&lt;/p&gt;
+&lt;h2&gt;&lt;a href&#x3D;&quot;#requirements&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;requirements&quot;&gt;&lt;/a&gt;Requirements&lt;/h2&gt;
+&lt;p&gt;The following is a list of requirements for Rust governance. Some of these requirements are already met by the current governance structure.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Independent and autonomous teams&lt;/strong&gt;: Almost all decision making should be made at the team level. Teams should have the ability to decide their own directions and have the ultimate authority over their respective piece of the project.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Cross team collaboration&lt;/strong&gt;: Collaboration between teams should be very high. This ensures teams can make decisions in the context of the larger project and not just within their own silo.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Accountable teams&lt;/strong&gt;: Teams should be held accountable to each other for their work. There should be mechanisms for ensuring teams are meeting other team’s expectations and fulfilling their obligations to other teams.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Centralized leadership&lt;/strong&gt;: While the majority of decisions are owned by and made by independent teams, some decisions affect the entire project. Any such decisions that are not in the purview of one or more specific teams are made by a centralized, accountable leadership body.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Accountable leadership&lt;/strong&gt;: The leadership body should be a structure that has representation and buy-in from all project teams. Additionally, the membership of this group should be chosen transparently, should have large buy-in from other project members, and should be at least reaffirmed relatively often. Lastly, membership in the leadership group requires participation in the wider project and therefore membership in leadership cannot be the exclusive way for someone to participate in the project.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Explicit and well-defined structure&lt;/strong&gt;: How the project is structured, who the decision makers are, and how decisions are made should be relatively transparent to both project participants and outsiders. While informal relationships and other soft power mechanisms exist, most collaboration happens transparently and openly.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Structures for project management and administration&lt;/strong&gt;: There should be mechanisms independent from decision making that perform functions of project management and administration.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Project leaders are not always technical leaders&lt;/strong&gt;: While it may be preferable for some of those who lead technical matters to hold project management leadership positions, being in a leadership position in the project should not require also being in a technical leadership role. In other words, the best language designers don’t necessarily make the best open source project leaders.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Flexibility&lt;/strong&gt;: Project structure should be fluid enough to account for the fact that project members always contribute on a volunteer basis (even if they are paid by others for their volunteering), and this means that they are free to leave the project and change what they dedicate their time to whenever they want.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Relatively little bureaucracy&lt;/strong&gt;: It’s important that the amount of project governance overhead and bureaucracy be as little as possible.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Approachable by outsiders&lt;/strong&gt;: Many outside of the Rust project (e.g., users, potential users, other projects, press, partners, etc.) may wish to engage with the Rust project for a variety of reasons. This process should be clear and straightforward.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a href&#x3D;&quot;#under-resourced-work&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;under-resourced-work&quot;&gt;&lt;/a&gt;Under resourced work&lt;/h2&gt;
+&lt;p&gt;The following is a list of work that is not receiving the amount of investment that it should be receiving. Our governance structure should ensure that this work receives the proper attention.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Policy development&lt;/strong&gt;: Individual teams do a decent job of ensuring they have proper policies, but there are a few problems with this:
+&lt;ul&gt;
+&lt;li&gt;Lack of accountability for when a lack of policy might be causing issues&lt;/li&gt;
+&lt;li&gt;Lack of support in writing policies&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Project structure documentation&lt;/strong&gt;: the structure of the project has practical implications. For example, representation in leadership, permissions, inclusion in project communications, etc. No team is in charge of ensuring this structure is properly documented&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Diversity efforts&lt;/strong&gt;: while some teams may take it on themselves to do diversity work, there is no one responsible for this at the project level&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Identifying gaps&lt;/strong&gt;: Teams do a good job of servicing their own existing needs but sometimes lack the context to know if other needs outside of their purview are being taken care of.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Contributor pipeline improvements&lt;/strong&gt;: Teams often do great work to improve their own workflow, but this assumes contributors are able to find the team they want to contribute on.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Conflict resolution&lt;/strong&gt;: Project members don’t always agree and in certain situations a positive outcome cannot be reached without the involvement of those outside that conflict.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Supporting team leads&lt;/strong&gt;: Some leads might be new to leadership and leadership in a vacuum without the support of others is hard. Team leads should not need to rely on personal, private relationships to get the support they need.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Project self-reflection&lt;/strong&gt;: instead of waiting for a crisis to occur before addressing issues, the governance structures should have mechanisms for automatically self correcting (i.e., doing the work that Mara and Ryan are doing now on a more regular basis)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Reporting progress&lt;/strong&gt;: there is a &lt;em&gt;lot&lt;/em&gt; that happens in the Rust project much of which is not reported on. Having some mechanism for better ensuring that everyone has a good overview of what is happening in the project.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Active community management&lt;/strong&gt;: actively fostering the culture of the Rust project&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Marketing&lt;/strong&gt;: the project had previously done more marketing around Rust usage - this work has largely moved to being performed exclusively by individuals&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Public relations&lt;/strong&gt;: The Rust project has obligations to speak to the outside world (i.e., press, companies, educational institutions, other OSS projects, etc.)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;User outreach&lt;/strong&gt;: while PR is a push mechanism, the project also needs some sort of pull mechanism for engaging with users and understanding their needs rather than solely relying on the individual insights that contributors bring.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Vision work&lt;/strong&gt;: establishing high level project wide goals that cross between team boundaries.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a href&#x3D;&quot;#failure-modes&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;failure-modes&quot;&gt;&lt;/a&gt;Failure modes&lt;/h2&gt;
+&lt;p&gt;The following are a list of identified failure modes that we want to ensure we avoid when discussing a new governance structure:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Lack of resources for admin/project management work&lt;/strong&gt;: Administrative and project management work is typically less resourced than technical work. Volunteers are typically more drawn towards technical work, and companies tend to fund technical work since they will more easily see a return on that investment. A properly running project is viewed as “table stakes” and thus less likely to see investment without purposeful resource allocation. A failure mode would be not having admin/project management functions be funded and eventually withering away leaving that work not done or done by those who are already busy with other concerns.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Project leadership not held accountable&lt;/strong&gt;: Many teams depend on the work of other teams for their own success. When a team feels another team is not delivering on what they need to succeed, this can lead to cascading failures or even outright conflict. Holding others accountable can be difficult because it requires clear expectations, channels for delivering clear and actionable feedback, consequences for consistently not living up to expectations, and mechanisms for handling conflict should it arise.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Project leadership detached from project&lt;/strong&gt;: As the project grows in complexity so does that admin/project management overhead. It is possible for a project wide decision making body to lose touch with goings-on in the project as they become busy due to this overhead. There are two ways this can manifest itself: the leadership body fails to keep up with what’s happening in the project and/or the project members lose sight of the leadership body leading to degraded authority. A failure mode would be that the project leadership body becomes detached from the project and the two effectively start acting independently.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;An overworked leadership body&lt;/strong&gt;: Many of the requirements described above assume a leadership body with the authority to make decisions. Additionally, the leadership body needs to derive its authority from its members involvement in the rest of the project. A possible failure mode is that the leadership body is tasked with more and more responsibility making it harder for its members to keep up with their responsibilities both inside and outside of that leadership body. The more members begin to focus on their work inside the leadership body, the less they can derive their authority from their work outside that body. Additionally, authority should be largely distributed and so an overworked leadership team is a sign of a failure to properly delegate authority.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Lack of delegated authority&lt;/strong&gt;: Some administration and project management tasks require a combination of both authority and large amounts of time to be completed. If authority can only be derived through involvement in technical matters in the project, there is a risk that those charged with that work will not be able to do the work. For example, in the list of under resourced work items above both “identifying gaps” and “project self reflection” require a certain level of authority to have the findings make an impact. It would be necessary for the groups doing that work to somehow gain the level of authority needed to get that work done.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Lack of transparency&lt;/strong&gt;: Project governance is composed of activities that live on a spectrum of how sensitive in nature they are. Some activities must be kept private as they directly involve the personal matters of individuals. On the other hand, some activities clearly need the involvement of the entire Rust project from the get-go. Many activities live somewhere in between. A potential failure mode is not consistently ensuring that information that can be made public is regularly made so. Even though this can in practice be very difficult and can make it difficult for some to participate in leadership positions, not doing so can lead to diminishing trust in leadership and a growing lack of accountability.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Leadership not consistently held to same standards&lt;/strong&gt;: Those in leadership positions should be held at least to the same standards as those in the rest of the project. What’s more, it can be tempting to revise policies and procedures or interpret underspecified ones while they’re being exercised. A failure mode is that it becomes common practice for leadership to hold themselves to different standards leading to an erosion of trust.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Underspecified processes/policies&lt;/strong&gt;: It can be tempting to write policy assuming participants have the same assumptions, understandings, etc. This is more flexible, requires less bureaucracy, and is easier to change on the fly. However, such processes/policies are easier to abuse (even without intentional malice). Important processes should be applicable even if the entire project membership is switched out.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Changing of delegated decisions&lt;/strong&gt;: A distributed governance structure relies on delegation. However, true delegation means respecting the authority of the party that decision making power has been delegated to. A possible failure mode is constantly second guessing the decisions of teams that have received delegated power. Accountability and oversight are important, but it’s also important that a delegating power not only respect decisions that it would have made itself.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Leadership as popularity contest&lt;/strong&gt;: Some systems of governance favor those who are willing to campaign and/or make themselves most visible. However, those most suitable to lead may not necessarily be those who participate in such activities. A possible failure mode is making project leadership a direct function of how popular/well-known someone is within the community or project.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Diffusion of responsibility&lt;/strong&gt;: If no one is explicitly responsible for a thing then it won’t necessarily get done, even if the thing not getting done is obviously and clearly causing harm. Without an explicit mechanism for understanding the needs of the project and ensuring that those needs are filled, the project is liable to continue to see important work not getting done.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I&#x27;d like to take this opportunity to thank you for reading this very long email. Once again, if you&#x27;d like to participate or give feedback in any form, please do not hesitate to reach out.&lt;/p&gt;
+&lt;p&gt;Cheers,&lt;br /&gt;
+Ryan&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;section class&#x3D;&quot;footnotes&quot;&gt;
+&lt;ol&gt;
+&lt;li id&#x3D;&quot;fn1&quot;&gt;
+&lt;p&gt;See &lt;a href&#x3D;&quot;https://github.com/rust-lang/blog.rust-lang.org/pull/974&quot;&gt;rust-lang/blog.rust-lang.org#974&lt;/a&gt; for the full history of changes to the original email. &lt;a href&#x3D;&quot;#fnref1&quot; class&#x3D;&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/section&gt;
+</content>
+
+        <author>
+            <name>Ryan Levick and Mara Bos</name>
+        </author>
+    </entry>
+    
+    <entry>
+        <title>1.61.0 pre-release testing</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/05/16/1.61.0-prerelease.html" type="text/html" title="1.61.0 pre-release testing" />
+        <published>2022-05-16T00:00:00+00:00</published>
+        <updated>2022-05-16T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/05/16/1.61.0-prerelease.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/05/16/1.61.0-prerelease.html">&lt;p&gt;The 1.61.0 pre-release is ready for testing. The release is scheduled for this
+Thursday, May 19th. &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/blob/stable/RELEASES.md#version-1610-2022-05-19&quot;&gt;Release notes can be found here.&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;You can try it out locally by running:&lt;/p&gt;
+&lt;pre&gt;&lt;code class&#x3D;&quot;language-plain&quot;&gt;RUSTUP_DIST_SERVER&#x3D;https://dev-static.rust-lang.org rustup update stable
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The index is &lt;a href&#x3D;&quot;https://dev-static.rust-lang.org/dist/2022-05-16/index.html&quot;&gt;https://dev-static.rust-lang.org/dist/2022-05-16/index.html&lt;/a&gt;. You
+can leave feedback on the &lt;a href&#x3D;&quot;https://internals.rust-lang.org/t/rust-1-61-0-prerelease-testing/&quot;&gt;internals thread&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The release team is also thinking about changes to our pre-release process:
+we&#x27;d love your feedback &lt;a href&#x3D;&quot;https://github.com/rust-lang/release-team/issues/16&quot;&gt;on this GitHub issue&lt;/a&gt;.&lt;/p&gt;
 </content>
 
         <author>
@@ -497,181 +268,420 @@ Significantly increasing the compiler&#x27;s build times on the official build i
     </entry>
     
     <entry>
-        <title>Lang team Backlog Bonanza and Project Proposals</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/10/16/Backlog-Bonanza.html" type="text/html" title="Lang team Backlog Bonanza and Project Proposals" />
-        <published>2020-10-16T00:00:00+00:00</published>
-        <updated>2020-10-16T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/10/16/Backlog-Bonanza.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/10/16/Backlog-Bonanza.html">&lt;p&gt;A month or two back, the lang team embarked on a new initiative that
-we call the &amp;quot;Backlog Bonanza&amp;quot;. The idea is simple: we are holding a
-series of meetings in which we go through every pending RFC, one by
-one, and try to reach some sort of determination about what to do with
-it.  Once we&#x27;ve finished that, we can start in on categorizing other
-forms of backlog, such as tracking issues.&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#possible-outcomes-for-each-rfc&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;possible-outcomes-for-each-rfc&quot;&gt;&lt;/a&gt;Possible outcomes for each RFC&lt;/h3&gt;
-&lt;p&gt;When we look at an RFC, we&#x27;re typically deciding between one of the following outcomes:&lt;/p&gt;
+        <title>CTCFT 2022-05-16 Agenda</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/05/10/CTCFT-may.html" type="text/html" title="CTCFT 2022-05-16 Agenda" />
+        <published>2022-05-10T00:00:00+00:00</published>
+        <updated>2022-05-10T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/05/10/CTCFT-may.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/05/10/CTCFT-may.html">&lt;p&gt;The next &lt;a href&#x3D;&quot;https://rust-lang.github.io/ctcft/&quot;&gt;&amp;quot;Cross Team Collaboration Fun Times&amp;quot; (CTCFT)&lt;/a&gt; meeting will take
+place on Monday, 2022-05-16 at &lt;strong&gt;11am US Eastern Time&lt;/strong&gt; (&lt;a href&#x3D;&quot;https://everytimezone.com/s/6c2a0d08&quot;&gt;click to see in your
+time zone&lt;/a&gt;). You’ll find the full details (along with a calendar
+event, zoom details, etc) &lt;a href&#x3D;&quot;https://rust-lang.github.io/ctcft/meetings/2022-05-16.html&quot;&gt;on the CTCFT website&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a href&#x3D;&quot;#agenda&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;agenda&quot;&gt;&lt;/a&gt;Agenda&lt;/h2&gt;
+&lt;p&gt;The theme for this month&#x27;s CTCFT is &lt;strong&gt;Embedded Rust&lt;/strong&gt;. We&#x27;ll hear from some
+members of the Rust Embedded Working Group and community about the state of the ecosystem, as
+well as how async Rust is working for embedded systems. We also have some people
+coming in from the automotive industry to talk about how Rust use is starting to
+progress.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Close&lt;/strong&gt; the RFC, if the problem doesn&#x27;t seem like high priority at the moment, or the solution seems quite far from what we would want.&lt;/li&gt;
-&lt;li&gt;Close, but &lt;strong&gt;suggest a &lt;a href&#x3D;&quot;https://lang-team.rust-lang.org/proposing_a_project.html&quot;&gt;project proposal&lt;/a&gt;&lt;/strong&gt;, if we think that the we might like to see the problem solved, but we aren&#x27;t sure if the RFC has the design right, or we&#x27;re not sure who would be a good liaison.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Merge&lt;/strong&gt; the RFC, if we think the RFC basically nailed it and we have a lang team liaison in mind.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#wait-what-is-a-project-proposal&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;wait-what-is-a-project-proposal&quot;&gt;&lt;/a&gt;Wait, what is a project proposal?&lt;/h3&gt;
-&lt;p&gt;I&#x27;m so glad you asked! The lang team is experimenting with a new
-process for extending the language. Instead of starting out by writing
-an RFC, the idea is to start with a &lt;strong&gt;&lt;a href&#x3D;&quot;https://lang-team.rust-lang.org/proposing_a_project.html&quot;&gt;project proposal&lt;/a&gt;&lt;/strong&gt;. This is a
-lightweight description that you do by &lt;a href&#x3D;&quot;https://github.com/rust-lang/lang-team/issues/new/choose&quot;&gt;opening an issue&lt;/a&gt; on the
-&lt;a href&#x3D;&quot;https://github.com/rust-lang/lang-team/&quot;&gt;lang-team repository&lt;/a&gt; using the &amp;quot;Project proposal&amp;quot; template. That
-will create an issue and a corresponding stream on Zulip.&lt;/p&gt;
-&lt;p&gt;In our &lt;a href&#x3D;&quot;https://lang-team.rust-lang.org/meetings.html&quot;&gt;weekly triage meetings&lt;/a&gt;, we go over each new project proposal
-and try to provide feedback. Project proposals generally result in one
-of a few possible outcomes:&lt;/p&gt;
+&lt;li&gt;(5 min) Opening remarks 👋 (&lt;a href&#x3D;&quot;https://github.com/angelonfira&quot;&gt;angelonfira&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;(15 min) A whirlwind tour of Embedded Rust (&lt;a href&#x3D;&quot;https://github.com/jamesmunns&quot;&gt;jamesmunns&lt;/a&gt;)
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Close&lt;/strong&gt;, if we feel like the idea isn&#x27;t a good fit right now.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Suggest implementing&lt;/strong&gt;, if we feel like the idea is simple or obvious enough that an RFC isn&#x27;t really needed. In that case, folks can just write a PR and we can use the fcp process to approve the PR.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Charter a project group&lt;/strong&gt;, if we feel like the idea is good, but we&#x27;d like to see the design spelled out. To do this, there has to be some lang-team liaison who wants to help see it through (though that liaison doesn&#x27;t have to be a member of the team; &lt;a href&#x3D;&quot;https://blog.rust-lang.org/inside-rust/2020/07/09/lang-team-path-to-membership.html&quot;&gt;serving as a liaison is a good way to get more involved in the lang team&lt;/a&gt;).&lt;/li&gt;
+&lt;li&gt;A brief history of the embedded-wg and use of Rust for embedded&lt;/li&gt;
+&lt;li&gt;A look at how developing embedded Rust looks like today&lt;/li&gt;
+&lt;li&gt;A sample of patterns that are special to embedded Rust, or differences from
+&amp;quot;desktop&amp;quot; Rust&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#chartering-a-project-group&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;chartering-a-project-group&quot;&gt;&lt;/a&gt;Chartering a project group&lt;/h3&gt;
-&lt;p&gt;A &amp;quot;project group&amp;quot; is basically just a group of people working together
-completing some idea. Project groups are often pretty small, just 1 or 2
-people, though they can get significantly larger.&lt;/p&gt;
-&lt;p&gt;Creating a smaller project group is meant to be lightweight. We
-basically convert the project proposal into a charter that states the
-general goals and create an associated zulip stream where folks can
-chat. Each project also gets a tracking issue that shows up on our
-&lt;a href&#x3D;&quot;https://github.com/rust-lang/lang-team/projects/2&quot;&gt;lang team project board&lt;/a&gt;. (For larger project groups, we can make a
-dedicated repo and an entry in the &lt;a href&#x3D;&quot;https://github.com/rust-lang/team&quot;&gt;Rust team repo&lt;/a&gt;.)&lt;/p&gt;
-&lt;p&gt;In the early stages of an idea, project groups work to draft an
-RFC. This RFC is then taken to the lang-team for feedback. Once the
-lang-team is basically happy on the direction things are going, we&#x27;ll
-encourage the group to open the RFC on the main RFC repository, where
-it&#x27;ll get feedback from a broader audience.&lt;/p&gt;
-&lt;p&gt;Once the RFC is &lt;strong&gt;accepted&lt;/strong&gt;, the hope is that project groups stick
-around. If desired, the same folks can try to implement the feature
-(in collaboration with the compiler team) or we can find new people.
-But this way, as those people try to implement, they&#x27;ll become a part
-of the same group that was designing the feature so that we can
-iterate more readily. The same logic applies to the other aspects of
-shipping a feature, most notably writing documentation.&lt;/p&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#tracking-projects-the-lang-team-project-board&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;tracking-projects-the-lang-team-project-board&quot;&gt;&lt;/a&gt;Tracking projects: the lang team project board&lt;/h3&gt;
-&lt;p&gt;I mentioned the &lt;a href&#x3D;&quot;https://github.com/rust-lang/lang-team/projects/2&quot;&gt;lang team project board&lt;/a&gt; off-hand in the previous
-paragraph. This is our attempt to track the ongoing efforts. It breaks
-down the various projects into stages, with the things that are closest
-to shipping coming first:&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;(15 min) Async Rust for Embedded Systems (&lt;a href&#x3D;&quot;https://github.com/Dirbaio&quot;&gt;Dirbaio&lt;/a&gt;)
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Stabilization&lt;/strong&gt; -- projects that we are ready to stabilize, or in
-the process of stabilizing.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Evaluation&lt;/strong&gt; -- projects that are fully implemented but where we are
-seeking feedback on how well the design works.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Implementation&lt;/strong&gt; -- projects that are currently working on implementation
-(and sometimes concurrent design iteration).&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Pending RFC&lt;/strong&gt; -- projects with an RFC that is pending public comment&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Design&lt;/strong&gt; -- projects actively iterating towards an RFC&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Shortlisted&lt;/strong&gt; -- project ideas that we might want to take up once we
-find a suitable liaison or people have enough bandwidth&lt;/li&gt;
+&lt;li&gt;We&#x27;ll explore how concurrency is traditionally handled in embedded, and how
+Rust&#x27;s async makes it significantly easier while still requiring no runtime,
+no OS, and no allocation, and what Rust improvements could make it even more
+awesome.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;&lt;a href&#x3D;&quot;#ways-to-get-involved&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;ways-to-get-involved&quot;&gt;&lt;/a&gt;Ways to get involved&lt;/h3&gt;
-&lt;p&gt;If you like, you are welcome to attend backlog bonanza meetings. They
-are open for anyone and take place during our &lt;a href&#x3D;&quot;https://lang-team.rust-lang.org/meetings.html&quot;&gt;design meeting&lt;/a&gt;
-most weeks. We haven&#x27;t setup a very good process for announcing our
-design meeting schedule, though, that&#x27;s something that we need to get
-better at.&lt;/p&gt;
-&lt;p&gt;Alternatively, if you have ideas you&#x27;d like to float, please feel free
-to open a &lt;a href&#x3D;&quot;https://lang-team.rust-lang.org/proposing_a_project.html&quot;&gt;project proposal&lt;/a&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;(15 min) Rust in Automotive (&lt;a href&#x3D;&quot;https://github.com/cpetig&quot;&gt;cpetig&lt;/a&gt;, &lt;a href&#x3D;&quot;https://github.com/skade&quot;&gt;skade&lt;/a&gt;)
+&lt;ul&gt;
+&lt;li&gt;We&#x27;ll look at Rust from a Functional Safety perspective, and continuing to
+the AUTOSAR architecture. We&#x27;ll also look a bit at what Ferrocene&#x27;s role is
+in all this, and look at the AUTOSAR Rust bindings. Finally, we&#x27;ll see
+what&#x27;s next for this space.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;(5 min) Closing (&lt;a href&#x3D;&quot;https://github.com/angelonfira&quot;&gt;angelonfira&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a href&#x3D;&quot;#afterwards-social-hour&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;afterwards-social-hour&quot;&gt;&lt;/a&gt;Afterwards: Social Hour&lt;/h2&gt;
+&lt;p&gt;Like always, we&#x27;ll be running a social hour after the CTCFT. The idea is really
+simple: for the hour after the meeting, we will create breakout rooms in Zoom
+with different themes. You can join any breakout room you like and hangout.&lt;/p&gt;
 </content>
 
         <author>
-            <name>Nicholas Matsakis</name>
+            <name>Rust CTCFT Team</name>
         </author>
     </entry>
     
     <entry>
-        <title>1.47.0 second pre-release testing</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/10/07/1.47.0-prerelease-2.html" type="text/html" title="1.47.0 second pre-release testing" />
-        <published>2020-10-07T00:00:00+00:00</published>
-        <updated>2020-10-07T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/10/07/1.47.0-prerelease-2.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/10/07/1.47.0-prerelease-2.html">&lt;p&gt;The second pre-release for 1.47.0 is ready for testing. The release is
-scheduled for this Thursday, October 8th. &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/blob/stable/RELEASES.md#version-1470-2020-10-08&quot;&gt;Release notes can be found
-here.&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;You can try it out locally by running:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-plain&quot;&gt;RUSTUP_DIST_SERVER&#x3D;https://dev-static.rust-lang.org rustup update stable
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The index is &lt;a href&#x3D;&quot;https://dev-static.rust-lang.org/dist/2020-10-07/index.html&quot;&gt;https://dev-static.rust-lang.org/dist/2020-10-07/index.html&lt;/a&gt;. You
-can leave feedback on the &lt;a href&#x3D;&quot;https://internals.rust-lang.org/t/1-47-0-pre-release-testing/&quot;&gt;internals thread&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Compared to the first pre-release, this one contains a fix for issue &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/76980&quot;&gt;#76980&lt;/a&gt;,
-the last known regression of 1.47.0. We&#x27;re interested in additional testing of
-this pre-release, as it includes that last-minute change.&lt;/p&gt;
+        <title>Rust Library Team Aspirations</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/04/20/libs-aspirations.html" type="text/html" title="Rust Library Team Aspirations" />
+        <published>2022-04-20T00:00:00+00:00</published>
+        <updated>2022-04-20T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/04/20/libs-aspirations.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/04/20/libs-aspirations.html">&lt;p&gt;Over the past years, Rust has grown from a language used by a few dedicated users
+into a well-known language used by lots of highly visible projects and
+successful companies.
+As the Rust user base, the community, and the ecosystem continues to grow,
+we need to look forward and consider how we need to scale to adapt
+to the needs of the ever expanding Rust ecosystem.&lt;/p&gt;
+&lt;p&gt;Recently, the compiler team shared &lt;a href&#x3D;&quot;https://blog.rust-lang.org/inside-rust/2022/02/22/compiler-team-ambitions-2022.html&quot;&gt;their blog post&lt;/a&gt;
+detailing their ambitions for 2022,
+and the language team published &lt;a href&#x3D;&quot;https://blog.rust-lang.org/inside-rust/2022/04/04/lang-roadmap-2024.html&quot;&gt;a roadmap&lt;/a&gt;
+with their vision for Rust in 2024.&lt;/p&gt;
+&lt;p&gt;In this blog post, we, the Rust library team, will share our perspective
+on the future of the Rust standard library and the library ecosystem.&lt;/p&gt;
+&lt;p&gt;It&#x27;s important to note that
+the role of the team is to coordinate changes and to guide, review and decide.
+The majority of the work itself is done by contributors, like yourself,
+both in and outside the Rust team.
+While we often also participate in design and implementation work,
+we do so as contributors, like everyone else.&lt;/p&gt;
+&lt;p&gt;What follows is an (incomplete) summary of topics we think
+are important and would like to coordinate and guide;
+things that we&#x27;d love to see happen,
+as an invitation and source of inspiration.&lt;/p&gt;
+&lt;h3&gt;&lt;a href&#x3D;&quot;#scalability&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;scalability&quot;&gt;&lt;/a&gt;Scalability&lt;/h3&gt;
+&lt;p&gt;As mentioned above, the Rust language, standard library, and ecosystem
+is growing and getting more mature.
+We need to invest in ways to keep evolving these smoothly.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Evolvability of the standard library and fixing mistakes&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The stability guarantee of Rust makes it hard to evolve the standard library.
+Unlike most crates, we cannot release a new major version, as that would effectively be releasing a &#x27;Rust 2.0&#x27;.
+So, once an API is stable, we have to keep it there forever, meaning that we have to be extremely careful
+when stabilizing anything new.&lt;/p&gt;
+&lt;p&gt;While we are very careful with adding new APIs, mistakes can still happen.
+There are a few things we would do differently if we could go back in time, based on current experience.
+There are not a lot of these cases, but over time these can still accumulate to the point that
+it&#x27;d be useful to have a mechanism to correct past mistakes.&lt;/p&gt;
+&lt;p&gt;The Rust language has the concept of &lt;a href&#x3D;&quot;https://doc.rust-lang.org/edition-guide/editions/index.html&quot;&gt;editions&lt;/a&gt;
+to be able to make breaking changes in the language itself, without disrupting Rust users.
+The library, however, can make very limited use of editions to correct mistakes.
+We have used them for the &lt;a href&#x3D;&quot;https://doc.rust-lang.org/edition-guide/rust-2021/panic-macro-consistency.html&quot;&gt;&lt;code&gt;panic!()&lt;/code&gt; macro&lt;/a&gt;
+and &lt;a href&#x3D;&quot;https://doc.rust-lang.org/edition-guide/rust-2021/prelude.html&quot;&gt;the prelude&lt;/a&gt;.
+However, in general, it&#x27;s extremely tricky to make use of the edition mechanism for backwards incompatible
+library changes, as crates of different editions can be mixed, while all using the same standard library.&lt;/p&gt;
+&lt;p&gt;There are also cases when adding a new API can subtly break existing Rust code,
+even when not changing any existing API.
+This can happen, for example, when a type gets a new method that was already available through
+a popular trait, such as &lt;code&gt;itertools::Itertools&lt;/code&gt; or &lt;code&gt;num::Integer&lt;/code&gt;.
+Adding a method to the standard library can result in an existing method call resolving differently,
+potentially breaking code.
+This is usually considered &#x27;acceptable&#x27; breakage, but as Rust usage grows,
+the impact of such breakage increases, often making such breakage unacceptable in practice.&lt;/p&gt;
+&lt;p&gt;So, in order to keep evolving the standard library, we&#x27;d like to collaborate on language features
+that alleviate these issues:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://github.com/rust-lang/rfcs/pull/3240&quot;&gt;Edition based method disambiguation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;A way to fix the &lt;code&gt;Range&lt;/code&gt; types, such that &lt;code&gt;1..2&lt;/code&gt; can be &lt;code&gt;Copy&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;A way to remove or improve lock poisoning without breaking existing code.&lt;/li&gt;
+&lt;li&gt;General mechanisms to provide for the library what editions provide for the language.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;People and collaboration&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The most important thing to keep Rust and the ecosystem scalable,
+are the people: Rust team members, maintainers of crates in the ecosystem,
+reviewers, contributors, and so on.
+It&#x27;s important we keep working on how we collaborate and make it
+as easy as possible for everyone to get involved in a way that works for them.&lt;/p&gt;
+&lt;p&gt;Concretely, we want to work on:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Better and more complete guidelines for contributors and reviewers; and&lt;/li&gt;
+&lt;li&gt;More interaction with the rest of the ecosystem.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Making &lt;code&gt;std&lt;/code&gt; less special / Empowering other crates in the ecosystem&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The standard library uses a
+&lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/94970&quot;&gt;huge amount of unstable language features&lt;/a&gt;
+that other crates in the ecosystem cannot (or should not) use.
+While this is unavoidable for &lt;code&gt;core&lt;/code&gt;, because it contains everything related
+to Rust&#x27;s built-in types, we should be able to make &lt;code&gt;alloc&lt;/code&gt; and &lt;code&gt;std&lt;/code&gt; less
+dependent on unstable features.
+Maybe some day these libraries could be no different than any other
+popular crate in the ecosystem.&lt;/p&gt;
+&lt;p&gt;A big part of the work here will be in collaboration with the language team,
+to help move the unstable language features we need towards a state where
+they can be stabilized.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Adapting to different platforms&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;As Rust&#x27;s popularity increases, it is used on an increasingly wider variety of platforms.
+The Rust standard library does an okay job at abstracting away some of the
+differences between popular platforms like Linux and Windows,
+through things like &lt;code&gt;File&lt;/code&gt; and &lt;code&gt;TcpStream&lt;/code&gt;,
+but we don&#x27;t do a great job for targets that do not look like those,
+such as Wasm or kernel modules.&lt;/p&gt;
+&lt;p&gt;For example, &lt;code&gt;core&lt;/code&gt; includes &lt;code&gt;f32&lt;/code&gt; and &lt;code&gt;f64&lt;/code&gt;, even if the platform doesn&#x27;t support floating point operations,
+and &lt;code&gt;std&lt;/code&gt; includes &lt;code&gt;File::open&lt;/code&gt;, even if it isn&#x27;t implemented and always fails on the specific platform you&#x27;re targeting.&lt;/p&gt;
+&lt;p&gt;In order to better support the ever growing diversity of platforms Rust is used on,
+we would like to collaborate with the language and compiler teams to make it easier
+for the standard library to properly support targets with very different needs,
+without it becoming hugely inconvenient for maintainers, contributors, or users:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Make it easier to port std to a new platform, possibly allowing the relevant code
+to live outside of the &lt;code&gt;rust-lang/rust&lt;/code&gt; repository for less popular platforms.&lt;/li&gt;
+&lt;li&gt;A better way to allow only parts of &lt;code&gt;std&lt;/code&gt; to be available, depending on the platform.
+For example, a &lt;code&gt;where Platform: Unix&lt;/code&gt; bound, or something like a &lt;a href&#x3D;&quot;https://rust-lang.github.io/rfcs/1868-portability-lint.html&quot;&gt;&lt;code&gt;#[cfg]&lt;/code&gt; portibility lint&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;A way to allow non-portable functionality to be available when on platforms
+that would support it, such as allowing infallible conversion between &lt;code&gt;u64&lt;/code&gt; and
+&lt;code&gt;usize&lt;/code&gt; in code that declares it only runs on 64-bit platforms.&lt;/li&gt;
+&lt;li&gt;Make the standard library more modular, allowing to disable e.g. floating point support
+or file system support on certain platforms.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a href&#x3D;&quot;#improving-and-adding-new-apis&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;improving-and-adding-new-apis&quot;&gt;&lt;/a&gt;Improving and adding new APIs&lt;/h3&gt;
+&lt;p&gt;A main focus of the library team is and will always be the public interface of the standard library.
+As of last year, we even have a separate team to make the final calls for API changes and additions:
+the &lt;a href&#x3D;&quot;https://www.rust-lang.org/governance/teams/library#Library%20API%20team&quot;&gt;library API team&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Rust purposely has a minimal standard library. Lots of commonly used functionality is
+found in other crates in the ecosystem, rather than the standard library.&lt;/p&gt;
+&lt;p&gt;Where exactly we draw the line between things that should and shouldn&#x27;t go in the standard library
+can be tricky to define and is somewhat flexible, but there are a few categories we&#x27;re most interested in.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Ergonomics&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;A lot of additions to the standard library are very small ones that increase ergonomics.
+Quite often, these are things that were already possible in some way, just not in an ergonomic way.
+Some recent examples are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;abs_diff()&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Path::is_symlink&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;iter::from_fn&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;NonZero*::saturating_add&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;While we always have to consider the trade-off for niche features to the already large interface
+on some types and traits, additions like these continue to happen regularly.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Standardizing some bigger features the ecosystem needs&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;As Rust grows into new territories, there is more and more a need
+for certain features to be included in the standard library.
+This is especially true for things where a consistent, standard, interface is
+important.
+Some of the bigger examples are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Async traits and functions&lt;/li&gt;
+&lt;li&gt;Allocators and fallible allocation&lt;/li&gt;
+&lt;li&gt;Error and panic handling&lt;/li&gt;
+&lt;li&gt;Portable SIMD&lt;/li&gt;
+&lt;li&gt;Benchmarking and custom test/bench frameworks&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Reducing and improving unsafe code&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;By providing the right low level APIs and abstractions, we can greatly minimize
+the amount of complex unsafe code that users need to write. Tools like
+&lt;code&gt;MaybeUninit&lt;/code&gt; guide users to correct unsafe code that&#x27;s easy to follow and
+prove correct. Even better, some APIs can entirely remove the need for unsafe
+code in many situations.
+This includes situations where users tend to reach for &lt;code&gt;unsafe&lt;/code&gt; for performance reasons.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;std::arch&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;std::simd&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Scoped threads&lt;/li&gt;
+&lt;li&gt;More atomic primitives&lt;/li&gt;
+&lt;li&gt;&#x27;&lt;code&gt;Iterator&lt;/code&gt;&#x27; with static length for arrays&lt;/li&gt;
+&lt;li&gt;Improving &lt;code&gt;MaybeUninit&lt;/code&gt; and related methods&lt;/li&gt;
+&lt;li&gt;Extending &lt;code&gt;NonNull&lt;/code&gt; and pointer methods&lt;/li&gt;
+&lt;li&gt;A more complete interface to &lt;code&gt;OsString&lt;/code&gt;, &lt;code&gt;Path&lt;/code&gt;, and &lt;code&gt;CString&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Documentation for &lt;code&gt;Pin&lt;/code&gt; and other &#x27;unsafe&#x27; types&lt;/li&gt;
+&lt;li&gt;File descriptors (&lt;code&gt;OwnedFd&lt;/code&gt;, &lt;code&gt;AsFd&lt;/code&gt;, etc) and handles (&lt;code&gt;OwnedHandle&lt;/code&gt;, &lt;code&gt;AsHandle&lt;/code&gt;, etc)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a href&#x3D;&quot;#improving-implementations-of-things-within-the-standard-library&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;improving-implementations-of-things-within-the-standard-library&quot;&gt;&lt;/a&gt;Improving implementations of things within the standard library&lt;/h3&gt;
+&lt;p&gt;Historically, the implementation details of the standard library got less attention
+than its public API.
+Recently, however, we&#x27;re seeing more and more contributions towards improving the implementation
+of various parts of the standard library.&lt;/p&gt;
+&lt;p&gt;These are some parts that we&#x27;re especially interested in seeing improvements in:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;core::fmt&lt;/code&gt; and the implementation of &lt;code&gt;format_args!()&lt;/code&gt; and &lt;code&gt;fmt::Arguments&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/93740&quot;&gt;Synchronization primitives like &lt;code&gt;Mutex&lt;/code&gt;, &lt;code&gt;RwLock&lt;/code&gt;, and &lt;code&gt;Condvar&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Cleanups in platform-specific code in &lt;code&gt;std::sys&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Avoiding allocations wherever possible, &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pull/93668&quot;&gt;such as when calling functions in &lt;code&gt;std::fs&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Making widely used types &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pull/87869&quot;&gt;such as &lt;code&gt;std::io::Error&lt;/code&gt;&lt;/a&gt; more light-weight&lt;/li&gt;
+&lt;li&gt;Cleaning up all unnecessary &lt;code&gt;SeqCst&lt;/code&gt; memory ordering&lt;/li&gt;
+&lt;li&gt;Optimizing thread local variables&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a href&#x3D;&quot;#conclusion&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;conclusion&quot;&gt;&lt;/a&gt;Conclusion&lt;/h3&gt;
+&lt;p&gt;We hope this summary provides a healthy amount of inspiration and excitement,
+and gives you an idea of what direction the library team is headed.
+If you want to help out, whether you want to work on implementation work,
+design, documentation, organisation, or any other kind of helpful work,
+you&#x27;re warmly invited to &lt;a href&#x3D;&quot;https://rust-lang.zulipchat.com/#narrow/stream/219381-t-libs&quot;&gt;get involved&lt;/a&gt;!&lt;/p&gt;
 </content>
 
         <author>
-            <name>Pietro Albini</name>
+            <name>Mara Bos</name>
         </author>
     </entry>
     
     <entry>
-        <title>1.47.0 pre-release testing</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/10/06/1.47.0-prerelease.html" type="text/html" title="1.47.0 pre-release testing" />
-        <published>2020-10-06T00:00:00+00:00</published>
-        <updated>2020-10-06T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/10/06/1.47.0-prerelease.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/10/06/1.47.0-prerelease.html">&lt;p&gt;The 1.47.0 pre-release is ready for testing. The release is scheduled for this
-Thursday, October 8th. &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/blob/stable/RELEASES.md#version-1470-2020-10-08&quot;&gt;Release notes can be found here.&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;You can try it out locally by running:&lt;/p&gt;
-&lt;pre&gt;&lt;code class&#x3D;&quot;language-plain&quot;&gt;RUSTUP_DIST_SERVER&#x3D;https://dev-static.rust-lang.org rustup update stable
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;The index is &lt;a href&#x3D;&quot;https://dev-static.rust-lang.org/dist/2020-10-06/index.html&quot;&gt;https://dev-static.rust-lang.org/dist/2020-10-06/index.html&lt;/a&gt;. You
-can leave feedback on the &lt;a href&#x3D;&quot;https://internals.rust-lang.org/t/1-47-0-pre-release-testing/&quot;&gt;internals thread&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Additionally, the release team is still investigating a regression in procedural
-macros which include C++ code, &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/76980&quot;&gt;#76980&lt;/a&gt;, and are interested in feedback and help
-from the community in figuring out a resolution to that bug.&lt;/p&gt;
+        <title>Imposter Syndrome</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/04/19/imposter-syndrome.html" type="text/html" title="Imposter Syndrome" />
+        <published>2022-04-19T00:00:00+00:00</published>
+        <updated>2022-04-19T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/04/19/imposter-syndrome.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/04/19/imposter-syndrome.html">&lt;p&gt;&lt;em&gt;Preface: This is in response to some feedback the project directors received
+from the Rust Foundation staff. Some of the contributors they&#x27;d talked to said
+they didn&#x27;t feel justified in applying for Foundation grants even though they&#x27;d
+love the opportunity, because they don&#x27;t feel qualified or deserving of them
+compared to the other amazing contributors they look up to within the Rust
+project. This was a little bit heart breaking to me, because I know exactly
+what that feeling is like&lt;sup class&#x3D;&quot;footnote-ref&quot;&gt;&lt;a href&#x3D;&quot;#fn1&quot; id&#x3D;&quot;fnref1&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;, and I also know just how wrong they are.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Imposter syndrome is an insidious problem within software communities. Many of
+us, especially members of marginalized communities, struggle to shake the
+feeling that we aren&#x27;t as qualified as our peers. This makes us feel
+unqualified and undeserving compared to those around us. It can make us
+hesitate to join communities in the first place and, for those already
+involved, it can create a sense of impending doom where you constantly feel
+like you&#x27;re going to get found out and expelled from the community. Overall
+it&#x27;s just not great for mental health, 0/10, would not recommend.&lt;/p&gt;
+&lt;p&gt;The thing is though, imposter syndrome is a logical fallacy&lt;sup class&#x3D;&quot;footnote-ref&quot;&gt;&lt;a href&#x3D;&quot;#fn2&quot; id&#x3D;&quot;fnref2&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;. Imposter
+syndrome occurs when we discount what we know and inflate what we think other
+people know, and this effect is often then reinforced by systemic bias for
+those of us who don&#x27;t get the assumption of competence.&lt;/p&gt;
+&lt;p&gt;&lt;img src&#x3D;&quot;../../../../images/2022-04-19-imposter-syndrome/imposter_syndrome.jpg&quot; alt&#x3D;&quot;picture of imposter syndrome, left side shows a large circle saying &amp;quot;What I think others know&amp;quot; and a small circle inside of it saying &amp;quot;What I know&amp;quot;, right side shows the same small circle saying &amp;quot;What I know&amp;quot; surrounded by many other equally sized small circles labeled &amp;quot;What others know&amp;quot;&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;In reality, we&#x27;re all specialists within the Rust project. We all have areas
+where we have deep expertise and other large areas where we only have the
+vaguest idea of how things work. &lt;a href&#x3D;&quot;https://github.com/nikomatsakis&quot;&gt;Niko&lt;/a&gt;, one
+of the lang team co-leads, former compiler team lead and core team alumni,
+still comes to me to ask questions about error handling. I frequently need to
+tell my fellow contributors that I have no idea what the acronyms they&#x27;re using
+mean&lt;sup class&#x3D;&quot;footnote-ref&quot;&gt;&lt;a href&#x3D;&quot;#fn3&quot; id&#x3D;&quot;fnref3&quot;&gt;3&lt;/a&gt;&lt;/sup&gt;. But this doesn&#x27;t mean we don&#x27;t deserve our positions within the
+project. We don&#x27;t expect every contributor to know everything, to be perfect, or
+to make no mistakes. The only thing we expect from our contributors is the
+ability to collaborate effectively with others and a willingness to learn and
+grow over time.&lt;/p&gt;
+&lt;p&gt;The thing that makes the Rust project as good as it is isn&#x27;t a couple of
+prolific contributors lifting mountains by themselves, it&#x27;s everyone working
+together that brought us to where we are today. We all make mistakes. The
+project has layer&lt;sup class&#x3D;&quot;footnote-ref&quot;&gt;&lt;a href&#x3D;&quot;#fn4&quot; id&#x3D;&quot;fnref4&quot;&gt;4&lt;/a&gt;&lt;/sup&gt; after layer&lt;sup class&#x3D;&quot;footnote-ref&quot;&gt;&lt;a href&#x3D;&quot;#fn5&quot; id&#x3D;&quot;fnref5&quot;&gt;5&lt;/a&gt;&lt;/sup&gt; of safeguards to make sure we have a
+chance to catch and fix them before they affect our users. These incidents are
+unavoidable, expected, and honestly fine! This is the most fundamental
+philosophy of both the Rust language and the Rust project: we don&#x27;t think it&#x27;s
+sufficient to build robust systems by only including people who don&#x27;t make
+mistakes; we think it&#x27;s better to provide tooling and process to catch and
+prevent mistakes. It isn&#x27;t an accident that our motto is &amp;quot;A language empowering
+everyone to build reliable and efficient software.&amp;quot; We want people to feel
+empowered to make changes they&#x27;re not 100% confident in, to make mistakes, to
+learn, and to grow within the Rust project. This is how all of us got to where
+we are today!&lt;/p&gt;
+&lt;p&gt;So, if you look up to people within the Rust project, if the work we do here
+interests you, if you have always wanted to contribute, and &lt;em&gt;especially&lt;/em&gt; if you
+already have contributed, I want you to know that you&#x27;re one of the people we
+want to apply for &lt;a href&#x3D;&quot;https://foundation.rust-lang.org/grants/&quot;&gt;Rust Foundation grants and
+fellowships&lt;/a&gt;. You&#x27;re one of the
+people we want to eventually see join teams. If you&#x27;re already on a team, I
+want you to know that you&#x27;re there for a good reason, and we value your
+judgement. You&#x27;re not an imposter, and I want you to know that I really look
+forward to seeing you around the project.&lt;/p&gt;
+&lt;p&gt;Edit: After I posted this it was brought to my attention that the image I used
+and tweet I cited are not from an original source, and they can actually be
+traced back to a series of blog posts by Alicia Liu. These original sources do
+a much more subtle exploration of what is and isn&#x27;t imposter syndrome, and
+particularly focus on how imposter syndrome impacts members of marginalized
+communities, I highly recommend reading these posts.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://medium.com/counter-intuition/overcoming-impostor-syndrome-bdae04e46ec5&quot;&gt;Overcoming Imposter Syndrome&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://medium.com/counter-intuition/impostor-syndrome-is-not-just-a-confidence-problem-dea670e59f6e&quot;&gt;Impostor Syndrome Is Not Just a Confidence Problem&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://medium.com/counter-intuition/you-don-t-have-impostor-syndrome-126e4c4bdcc&quot;&gt;You don&#x27;t have Imposter Syndrome&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr /&gt;
+&lt;p&gt;&lt;em&gt;To help reinforce and normalize this, I&#x27;ve gathered a list of times when
+current or past project members have struggled with imposter syndrome, have
+made mistakes, have had to ask &amp;quot;basic&amp;quot; questions, and similar experiences that
+will hopefully help set more reasonable expectations for new and old
+contributors across the project.&lt;/em&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://github.com/yaahc/&quot;&gt;Jane Lusby&lt;/a&gt;: &amp;quot;I frequently struggle with imposter
+syndrome and feeling like I don&#x27;t get as much done as my peers. When I do all
+of my work based off of notifications I completely lose track of what I&#x27;ve
+done and end up starving the tasks I wanted to work on. I&#x27;m learning to set
+reasonable expectations for myself, getting better at managing distractions,
+and being intentional about when I respond to github/zulip notifications
+which helps me with keeping track of what I&#x27;ve done and making steady
+progress on my priorities.&amp;quot;&lt;/li&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://github.com/joshtriplett/&quot;&gt;Josh Triplett&lt;/a&gt;: &amp;quot;I didn&#x27;t fully understand
+&lt;code&gt;Pin&lt;/code&gt; until I read fasterthanlime&#x27;s &lt;a href&#x3D;&quot;https://fasterthanli.me/articles/pin-and-suffering&quot;&gt;&amp;quot;Pin and
+suffering&amp;quot;&lt;/a&gt; blog post and
+I gave a talk in 2016 where my &lt;a href&#x3D;&quot;https://www.youtube.com/watch?v&#x3D;U8Gl3RTXf88#t&#x3D;24m40s&quot;&gt;most important
+point&lt;/a&gt; was that people
+erroneously believe that you have to be an expert to write an RFC or change
+Rust, but that I wasn&#x27;t, and you don&#x27;t need to be one either.&amp;quot;&lt;/li&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://github.com/ralfjung&quot;&gt;Ralf Jung&lt;/a&gt;: &amp;quot;I am still surprised anyone is
+taking Miri and Stacked Borrows seriously.&amp;quot;&lt;/li&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://github.com/angelonfira/&quot;&gt;Forest Anderson&lt;/a&gt;: &amp;quot;As someone who just
+learned last week what &lt;code&gt;dyn&lt;/code&gt; does, it still amazes me that I have something to
+give as a team lead. I was immersed in Rust communities by writing weekly
+blogs about Veloren (I took this on because I didn&#x27;t know enough to contribute
+code), which lead to helping with the Rust Gamedev newsletter, which led me to
+helping to run the Cross Team Collaboration Fun Times meetup!&amp;quot;&lt;/li&gt;
+&lt;li&gt;&lt;a href&#x3D;&quot;https://github.com/pnkfelix&quot;&gt;Felix S Klock II&lt;/a&gt;: &amp;quot;Back in 2015, while I was
+presenting a tutorial on Rust, and explaining &lt;code&gt;&amp;amp;T&lt;/code&gt;, I had someone from the
+audience, a Rust expert, say &amp;quot;ah ah ah! but what about interior mutability&amp;quot;;
+and in my mind I thought &amp;quot;... oh no; what is that?&amp;quot;, followed by &amp;quot;... what am
+I doing, I&#x27;m not qualified to be up here...&amp;quot;. All of us &amp;quot;imposters&amp;quot; must
+strive to prevent such moments from becoming barriers to our own
+participation. I&#x27;ve learned a lot about Rust (and group dynamics, and
+organizational behavior) since then, but I&#x27;m still learning every day;
+re-learning, in some cases.&amp;quot;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;section class&#x3D;&quot;footnotes&quot;&gt;
+&lt;ol&gt;
+&lt;li id&#x3D;&quot;fn1&quot;&gt;
+&lt;p&gt;Quote from &lt;a href&#x3D;&quot;https://yaah.dev/getting-involved&quot;&gt;https://yaah.dev/getting-involved&lt;/a&gt;: &amp;quot;What happened at the
+Google meetup you ask? Manish, our wonderful meetup organizer, walked up to
+me, unprompted, and asked “Hey, you’re Jane right?”. I was shocked, how the
+heck did Manish know who I was? It didn’t feel as though I’d done anything
+worthy of notice, and yet here he was asking for me by name.&amp;quot; &lt;a href&#x3D;&quot;#fnref1&quot; class&#x3D;&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id&#x3D;&quot;fn2&quot;&gt;
+&lt;p&gt;&lt;a href&#x3D;&quot;https://twitter.com/ithinkwellHugh/status/1175900121097220096&quot;&gt;https://twitter.com/ithinkwellHugh/status/1175900121097220096&lt;/a&gt; &lt;a href&#x3D;&quot;#fnref2&quot; class&#x3D;&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id&#x3D;&quot;fn3&quot;&gt;
+&lt;p&gt;&lt;a href&#x3D;&quot;https://github.com/rust-lang/project-error-handling/issues/34#issuecomment-1092269566&quot;&gt;https://github.com/rust-lang/project-error-handling/issues/34#issuecomment-1092269566&lt;/a&gt; &lt;a href&#x3D;&quot;#fnref3&quot; class&#x3D;&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id&#x3D;&quot;fn4&quot;&gt;
+&lt;p&gt;Any irreversible changes such as stabilizations require almost everyone
+on the relevant team to approve the change and zero people on the team to
+raise concerns. &lt;a href&#x3D;&quot;#fnref4&quot; class&#x3D;&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id&#x3D;&quot;fn5&quot;&gt;
+&lt;p&gt;We double check all changes with
+&lt;a href&#x3D;&quot;https://github.com/rust-lang/crater&quot;&gt;crater&lt;/a&gt; before they ever land on stable
+and are careful to &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/88967&quot;&gt;quickly&lt;/a&gt;
+&lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/90904&quot;&gt;revert&lt;/a&gt;
+&lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/issues/82913&quot;&gt;changes&lt;/a&gt; that cause problems
+on crater or nightly. &lt;a href&#x3D;&quot;#fnref5&quot; class&#x3D;&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/section&gt;
 </content>
 
         <author>
-            <name>Mark Rousskov</name>
+            <name>Jane Lusby, Project Director of Collaboration</name>
         </author>
     </entry>
     
     <entry>
-        <title>Announcing the Portable SIMD Project Group</title>
-        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2020/09/29/Portable-SIMD-PG.html" type="text/html" title="Announcing the Portable SIMD Project Group" />
-        <published>2020-09-29T00:00:00+00:00</published>
-        <updated>2020-09-29T00:00:00+00:00</updated>
-        <id>https://blog.rust-lang.org/inside-rust/2020/09/29/Portable-SIMD-PG.html</id>
-        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2020/09/29/Portable-SIMD-PG.html">&lt;p&gt;We&#x27;re announcing the start of the &lt;em&gt;Portable SIMD Project Group&lt;/em&gt; within the Libs team. This group is dedicated to making a portable SIMD API available to stable Rust users.&lt;/p&gt;
-&lt;p&gt;The Portable SIMD Project Group is lead by &lt;a href&#x3D;&quot;https://github.com/calebzulawski&quot;&gt;@calebzulawski&lt;/a&gt;, &lt;a href&#x3D;&quot;https://github.com/Lokathor&quot;&gt;@Lokathor&lt;/a&gt;, and &lt;a href&#x3D;&quot;https://github.com/workingjubilee&quot;&gt;@workingjubilee&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#what-are-project-groups&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;what-are-project-groups&quot;&gt;&lt;/a&gt;What are project groups?&lt;/h2&gt;
-&lt;p&gt;Rust uses &lt;a href&#x3D;&quot;https://rust-lang.github.io/rfcs/2856-project-groups.html&quot;&gt;project groups&lt;/a&gt; to help coordinate work.
-They&#x27;re a place for people to get involved in helping shape the parts of Rust that matter to them.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#what-is-simd&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;what-is-simd&quot;&gt;&lt;/a&gt;What is SIMD?&lt;/h2&gt;
-&lt;p&gt;SIMD stands for Single Instruction, Multiple Data.
-It lets the CPU apply a single instruction to a &amp;quot;vector&amp;quot; of data.
-The vector is a single extra-wide CPU register made of multiple &amp;quot;lanes&amp;quot; of the same data type.
-You can think of it as being &lt;em&gt;similar&lt;/em&gt; to an array.
-Instead of processing each lane individually, all lanes have the same operation applied &lt;em&gt;simultaneously&lt;/em&gt;.
-This lets you transform data much faster than with standard code.
-Not every problem can be accelerated with &amp;quot;vectorized&amp;quot; code, but for multimedia and list-processing applications there can be significant gains.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#why-do-you-need-to-make-it-portable&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;why-do-you-need-to-make-it-portable&quot;&gt;&lt;/a&gt;Why do you need to make it portable?&lt;/h2&gt;
-&lt;p&gt;Different chip vendors offer different SIMD instructions.
-Some of these are available in Rust&#x27;s &lt;a href&#x3D;&quot;https://doc.rust-lang.org/core/arch/index.html&quot;&gt;&lt;code&gt;std::arch&lt;/code&gt;&lt;/a&gt; module.
-You &lt;em&gt;can&lt;/em&gt; build vectorized functions using that, but at the cost of maintaining a different version for each CPU you want to support.
-You can also &lt;em&gt;not&lt;/em&gt; write vectorized operations and hope that LLVM&#x27;s optimizations will &amp;quot;auto-vectorize&amp;quot; your code.
-However, the auto-vectorizer is easily confused and can fail to optimize &amp;quot;obvious&amp;quot; vector tasks.&lt;/p&gt;
-&lt;p&gt;The portable SIMD API will enable writing SIMD code just once using a high-level API.
-By explicitly communicating your intent to the compiler, it&#x27;s better able to generate the best possible final code.
-This is still only a best-effort process.
-If your target doesn&#x27;t support a desired operation in SIMD, the compiler will fall back to using scalar code, processing one lane at a time.
-The details of what&#x27;s available depend on the build target.&lt;/p&gt;
-&lt;p&gt;We intend to release the Portable SIMD API as &lt;code&gt;std::simd&lt;/code&gt;.
-We will cover as many use cases as we can, but it might still be appropriate for you to use &lt;code&gt;std::arch&lt;/code&gt; directly.
-For that reason the &lt;code&gt;std::simd&lt;/code&gt; types will also be easily convertable to &lt;code&gt;std::arch&lt;/code&gt; types where needed.&lt;/p&gt;
-&lt;h2&gt;&lt;a href&#x3D;&quot;#how-can-i-get-involved&quot; aria-hidden&#x3D;&quot;true&quot; class&#x3D;&quot;anchor&quot; id&#x3D;&quot;how-can-i-get-involved&quot;&gt;&lt;/a&gt;How can I get involved?&lt;/h2&gt;
-&lt;p&gt;Everyone can get involved!
-No previous experience necessary.
-If you&#x27;d like to help make portable SIMD a reality you can visit our &lt;a href&#x3D;&quot;https://github.com/rust-lang/project-portable-simd&quot;&gt;GitHub repository&lt;/a&gt; or reach out on &lt;a href&#x3D;&quot;https://rust-lang.zulipchat.com/#narrow/stream/257879-project-portable-simd&quot;&gt;Zulip&lt;/a&gt; and say hi! :wave:&lt;/p&gt;
+        <title>Please welcome Thom and Chris to Library Contributors</title>
+        <link rel="alternate" href="https://blog.rust-lang.org/inside-rust/2022/04/18/libs-contributors.html" type="text/html" title="Please welcome Thom and Chris to Library Contributors" />
+        <published>2022-04-18T00:00:00+00:00</published>
+        <updated>2022-04-18T00:00:00+00:00</updated>
+        <id>https://blog.rust-lang.org/inside-rust/2022/04/18/libs-contributors.html</id>
+        <content type="html" xml:base="https://blog.rust-lang.org/inside-rust/2022/04/18/libs-contributors.html">&lt;p&gt;Please welcome Thom Chiovoloni and Chris Denton to the
+&lt;a href&#x3D;&quot;https://www.rust-lang.org/governance/teams/library#libs-contributors&quot;&gt;Library Contributors&lt;/a&gt; group!&lt;/p&gt;
+&lt;p&gt;&lt;a href&#x3D;&quot;https://github.com/thomcc&quot;&gt;Thom&lt;/a&gt; has been working on various improvements to the implementation
+of the standard library, such as &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pull/87869&quot;&gt;optimizing &lt;code&gt;io::Error&lt;/code&gt;&lt;/a&gt;,
+&lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pull/90414&quot;&gt;optimizing &lt;code&gt;Chars::count&lt;/code&gt;&lt;/a&gt;, and has been helping out
+with reviewing various implementation changes.&lt;/p&gt;
+&lt;p&gt;&lt;a href&#x3D;&quot;https://github.com/ChrisDenton/&quot;&gt;Chris&lt;/a&gt; has been focusing on the Windows specific parts of the standard library.
+Chris implemented the Windows part of the patch for &lt;a href&#x3D;&quot;https://blog.rust-lang.org/2022/01/20/cve-2022-21658.html&quot;&gt;CVE-2022-21658&lt;/a&gt;,
+and has done &lt;a href&#x3D;&quot;https://github.com/rust-lang/rust/pulls?q&#x3D;is%3Apr+author%3Achrisdenton+is%3Aclosed&quot;&gt;a ton of work&lt;/a&gt;
+to improve the Windows side of &lt;code&gt;std::fs&lt;/code&gt;, &lt;code&gt;std::path&lt;/code&gt;, &lt;code&gt;std::process&lt;/code&gt; and other modules.&lt;/p&gt;
+&lt;p&gt;Congratulations Thom and Chris, and thanks for everything you do!&lt;/p&gt;
 </content>
 
         <author>
-            <name>Jubilee and Lokathor</name>
+            <name>Mara Bos</name>
         </author>
     </entry>
     
